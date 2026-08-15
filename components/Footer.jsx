@@ -4,7 +4,6 @@ import TNStateMark from "./TNStateMark";
 export default function Footer() {
   return (
     <footer>
-      <TNStateMark className="footer-mark" opacity={0.1} />
       <div className="wrap">
         <div>
           <h3>Price Family Farm</h3>
@@ -29,7 +28,18 @@ export default function Footer() {
           <li><Link href="/contact">Contact</Link></li>
         </ul>
       </div>
-      <div className="wrap foot-bottom">Price Family Farm · Greeneville, East Tennessee · Est. 2026</div>
+
+      <TNStateMark className="footer-mark" opacity={0.1} />
+
+      <div className="wrap foot-bottom">
+        <span>Price Family Farm · Greeneville, East Tennessee · Est. 2026</span>
+        <span>
+          Made and Designed by{" "}
+          <a className="designer-credit" href="https://alecjprice.com/" target="_blank" rel="noreferrer">
+            Alec J. Price
+          </a>
+        </span>
+      </div>
     </footer>
   );
 }
