@@ -1,5 +1,6 @@
 import { Fraunces, Public_Sans, Space_Mono } from "next/font/google";
 import "./globals.css";
+import "./responsive.css";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -30,6 +31,13 @@ export const metadata = {
   title: "Price Family Farm · Greeneville, East Tennessee",
   description:
     "Price Family Farm is a family-run orchard, greenhouse, and market garden in Greeneville, East Tennessee. Follow the build, what we grow, and how we grow it.",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#253a20",
 };
 
 export default function RootLayout({ children }) {
