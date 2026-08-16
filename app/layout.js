@@ -1,6 +1,7 @@
 import { Fraunces, Public_Sans, Space_Mono } from "next/font/google";
 import "./globals.css";
 import "./responsive.css";
+import "./tablet-nav.css";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
