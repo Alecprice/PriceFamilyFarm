@@ -1,0 +1,76 @@
+/* Compact tablets do better with the same touch-first menu used on phones. */
+@media (min-width: 781px) and (max-width: 960px) {
+  .site-nav .wrap {
+    min-height: 68px;
+    flex-wrap: nowrap;
+  }
+
+  .nav-toggle {
+    display: block;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0;
+    max-height: calc(100dvh - 68px - env(safe-area-inset-top));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--forest-deep);
+    padding: 8px max(var(--page-gutter), env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(var(--page-gutter), env(safe-area-inset-left));
+    border-bottom: 3px solid var(--soil);
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .nav-links a {
+    display: flex;
+    align-items: center;
+    min-height: 46px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line-light);
+    font-size: 13.5px;
+  }
+
+  .nav-dropdown-toggle {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 0;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line-light);
+    font-size: 13.5px;
+  }
+
+  .dropdown-menu {
+    position: static;
+    display: none;
+    min-width: 0;
+    margin: 0;
+    padding: 6px 8px;
+    border: 0;
+    box-shadow: none;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .dropdown-menu.open {
+    display: block;
+  }
+
+  .dropdown-menu li a {
+    min-height: 44px;
+    padding-left: 16px;
+  }
+
+  .hero-grid {
+    gap: 34px;
+  }
+}
