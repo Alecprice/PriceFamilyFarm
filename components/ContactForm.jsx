@@ -30,7 +30,7 @@ export default function ContactForm() {
       form.reset();
     } catch {
       setStatus("error");
-      setErrorMsg("Couldn&rsquo;t reach the form service. Check your connection and try again.");
+      setErrorMsg("Couldn’t reach the form service. Check your connection and try again.");
     }
   }
 
@@ -75,7 +75,7 @@ export default function ContactForm() {
         <textarea id="message" name="message" rows={6} required minLength={10} maxLength={2000} />
       </div>
 
-      {status === "error" ? <p className="form-error" role="alert" dangerouslySetInnerHTML={{ __html: errorMsg }} /> : null}
+      {status === "error" ? <p className="form-error" role="alert">{errorMsg}</p> : null}
 
       <button type="submit" className="btn btn-clay" style={{ border: "1px solid var(--clay)" }} disabled={status === "sending"}>
         {status === "sending" ? "Sending…" : "Send message"}
