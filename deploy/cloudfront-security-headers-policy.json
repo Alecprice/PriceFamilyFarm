@@ -21,7 +21,32 @@
     },
     "ContentSecurityPolicy": {
       "Override": true,
-      "ContentSecurityPolicy": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; img-src 'self' data: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://api.weather.gov https://api.web3forms.com; form-action 'self'; upgrade-insecure-requests"
+      "ContentSecurityPolicy": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; frame-src 'none'; img-src 'self' data: blob:; media-src 'self'; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; script-src-attr 'none'; connect-src 'self' https://api.weather.gov https://api.web3forms.com; worker-src 'self' blob:; manifest-src 'self'; form-action 'self'; upgrade-insecure-requests"
     }
+  },
+  "CustomHeadersConfig": {
+    "Quantity": 4,
+    "Items": [
+      {
+        "Header": "Permissions-Policy",
+        "Value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+        "Override": true
+      },
+      {
+        "Header": "Cross-Origin-Opener-Policy",
+        "Value": "same-origin",
+        "Override": true
+      },
+      {
+        "Header": "Cross-Origin-Resource-Policy",
+        "Value": "same-origin",
+        "Override": true
+      },
+      {
+        "Header": "X-Permitted-Cross-Domain-Policies",
+        "Value": "none",
+        "Override": true
+      }
+    ]
   }
 }
