@@ -5,6 +5,14 @@ async function expectNoHorizontalOverflow(page) {
   expect(overflow).toBeLessThanOrEqual(1);
 }
 
+async function openPrimaryNavIfCollapsed(page) {
+  const menu = page.getByRole("button", { name: /menu/i });
+  if (await menu.isVisible()) {
+    await menu.click();
+    await expect(menu).toHaveAttribute("aria-expanded", "true");
+  }
+}
+
 test("home stays usable without horizontal overflow", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Grow the farm");
@@ -12,11 +20,13 @@ test("home stays usable without horizontal overflow", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
-test("navigation exposes task-oriented destinations", async ({ page, isMobile }) => {
+test("navigation exposes task-oriented destinations", async ({ page }) => {
   await page.goto("/");
-  const menu = page.getByRole("button", { name: /menu/i });
-  if (isMobile && await menu.isVisible()) await menu.click();
-  await page.getByRole("button", { name: /^Farm/ }).click();
+  await openPrimaryNavIfCollapsed(page);
+  const farmMenu = page.getByRole("button", { name: /^Farm/ });
+  await expect(farmMenu).toBeVisible();
+  await farmMenu.click();
+  await expect(farmMenu).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByRole("link", { name: "Farm Records" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Availability" })).toBeVisible();
 });
