@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   verify:
@@ -25,18 +26,37 @@ jobs:
       - name: Farm OS contracts
         run: node scripts/verify-farm-os.mjs
       - name: Production static build
+        id: build
         env:
           NEXT_PUBLIC_SITE_URL: https://price-family-farm.alecjprice.com
-        run: npm run build
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee build.log
+      - name: Report build failure
+        if: failure() && steps.build.outcome == 'failure' && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "### Automated build gate failure"
+            echo
+            echo '```text'
+            tail -n 120 build.log
+            echo '```'
+          } > /tmp/build-comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/build-comment.md
       - name: Install browser test runner
+        if: success()
         run: |
           npm install --no-save @playwright/test@1.55.0
           npx playwright install --with-deps chromium
       - name: Serve static export
+        if: success()
         run: |
           python3 -m http.server 4173 --directory out > /tmp/farm-site-http.log 2>&1 &
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0; sleep 1; done
           cat /tmp/farm-site-http.log
           exit 1
       - name: Responsive and interaction smoke tests
+        if: success()
         run: npx playwright test
