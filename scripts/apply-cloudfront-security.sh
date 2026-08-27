@@ -55,10 +55,11 @@ PY
 )"
 printf 'Current default-behavior response headers policy: %s\n' "${current_policy_id:-none}"
 
-existing_policy_id="$(aws cloudfront list-response-headers-policies --type custom --output json | python3 - "$POLICY_NAME" <<'PY'
+aws cloudfront list-response-headers-policies --type custom --output json > "$workdir/policies.json"
+existing_policy_id="$(python3 - "$workdir/policies.json" "$POLICY_NAME" <<'PY'
 import json, sys
-name = sys.argv[1]
-data = json.load(sys.stdin)
+source, name = sys.argv[1:]
+data = json.load(open(source))
 for item in data.get("ResponseHeadersPolicyList", {}).get("Items", []) or []:
     policy = item.get("ResponseHeadersPolicy", {})
     cfg = policy.get("ResponseHeadersPolicyConfig", {})
