@@ -66,6 +66,25 @@ const weather = read("components/WeatherPanel.jsx");
 expect(weather.includes('url.hostname !== "api.weather.gov"'), "NWS forecast redirect origin is allowlisted");
 expect(weather.includes("REQUEST_TIMEOUT_MS"), "NWS requests have a timeout");
 
+const edgePolicy = JSON.parse(read("deploy/cloudfront-security-headers-policy.json"));
+const securityHeaders = edgePolicy.SecurityHeadersConfig || {};
+const csp = securityHeaders.ContentSecurityPolicy?.ContentSecurityPolicy || "";
+const customHeaders = new Map((edgePolicy.CustomHeadersConfig?.Items || []).map((item) => [String(item.Header).toLowerCase(), item.Value]));
+expect(securityHeaders.FrameOptions?.FrameOption === "DENY", "CloudFront policy denies framing");
+expect(securityHeaders.ContentTypeOptions?.Override === true, "CloudFront policy enables nosniff");
+expect(securityHeaders.StrictTransportSecurity?.AccessControlMaxAgeSec >= 31_536_000, "CloudFront policy enables long-lived HSTS");
+expect(csp.includes("default-src 'self'"), "CSP defaults to same origin");
+expect(csp.includes("object-src 'none'"), "CSP disables plugin/object content");
+expect(csp.includes("frame-ancestors 'none'"), "CSP blocks clickjacking ancestors");
+expect(csp.includes("script-src-attr 'none'"), "CSP blocks inline event-handler attributes");
+expect(csp.includes("https://api.weather.gov"), "CSP explicitly allows the NWS API");
+expect(csp.includes("https://api.web3forms.com"), "CSP explicitly allows Web3Forms");
+expect(!/connect-src[^;]*\*/.test(csp), "CSP does not wildcard outbound connections");
+expect(customHeaders.get("permissions-policy")?.includes("camera=()"), "Permissions-Policy disables camera access");
+expect(customHeaders.get("permissions-policy")?.includes("geolocation=()"), "Permissions-Policy disables browser geolocation");
+expect(customHeaders.get("cross-origin-opener-policy") === "same-origin", "COOP isolates the top-level browsing context");
+expect(customHeaders.get("cross-origin-resource-policy") === "same-origin", "CORP protects static resources from cross-origin embedding");
+
 for (const file of runtimeFiles.filter((file) => /\.(jsx?|mjs)$/.test(file))) {
   const source = fs.readFileSync(file, "utf8");
   const relative = path.relative(root, file);
@@ -79,6 +98,7 @@ for (const file of runtimeFiles.filter((file) => /\.(jsx?|mjs)$/.test(file))) {
 
 expect(!fs.existsSync(path.join(root, ".env")), ".env is not committed");
 expect(!fs.existsSync(path.join(root, ".env.local")), ".env.local is not committed");
+expect(fs.existsSync(path.join(root, "public/.well-known/security.txt")), "security.txt is published");
 
 if (failures.length) {
   console.error(`Security verification failed (${failures.length}/${checks.length}):`);
