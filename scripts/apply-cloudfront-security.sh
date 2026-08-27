@@ -87,7 +87,7 @@ if [[ "$APPLY" != "1" ]]; then
 DRY RUN ONLY: no AWS settings were changed.
 Review the AWS account and distribution above. To apply exactly this change, rerun with:
 
-  APPLY=1 scripts/apply-cloudfront-security.sh
+  APPLY=1 bash scripts/apply-cloudfront-security.sh
 
 A timestamped copy of the current distribution configuration was written to .security-backups/.
 EOF
@@ -153,10 +153,10 @@ fi
 
 printf '\n=== POST-CHANGE AUDIT ===\n'
 if [[ -n "${PFF_BUCKET:-}" ]]; then
-  PFF_BUCKET="$PFF_BUCKET" PFF_DISTRIBUTION_ID="$PFF_DISTRIBUTION_ID" scripts/audit-edge-security.sh
+  PFF_BUCKET="$PFF_BUCKET" PFF_DISTRIBUTION_ID="$PFF_DISTRIBUTION_ID" bash scripts/audit-edge-security.sh
 else
   echo "PFF_BUCKET is not set, so the full S3 + CloudFront audit was not run."
-  echo "Set PFF_BUCKET and run: scripts/audit-edge-security.sh"
+  echo "Set PFF_BUCKET and run: bash scripts/audit-edge-security.sh"
 fi
 
 cat <<EOF
@@ -166,5 +166,5 @@ Backup of the pre-change distribution config:
   $backup_dir/cloudfront-${PFF_DISTRIBUTION_ID}-${stamp}.json
 
 Next verify the viewer response:
-  scripts/verify-live-security.sh https://$PFF_EXPECTED_ALIAS/
+  bash scripts/verify-live-security.sh https://$PFF_EXPECTED_ALIAS/
 EOF
