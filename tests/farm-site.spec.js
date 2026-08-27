@@ -6,7 +6,9 @@ async function expectNoHorizontalOverflow(page) {
 }
 
 async function openPrimaryNavIfCollapsed(page) {
-  const menu = page.getByRole("button", { name: /menu/i });
+  // Use a stable selector rather than the button's accessible name because
+  // the visible text changes from "Menu" to "Close" after it is opened.
+  const menu = page.locator('button[aria-controls="primary-nav-links"]');
   if (await menu.isVisible()) {
     await menu.click();
     await expect(menu).toHaveAttribute("aria-expanded", "true");
@@ -33,7 +35,7 @@ test("navigation exposes task-oriented destinations", async ({ page }) => {
 
 test("Farm Records persist private harvest data across reload", async ({ page }) => {
   await page.goto("/farm-records/");
-  await page.getByRole("textbox", { name: "Crop" }).fill("Smoke test tomato");
+  await page.getByRole("textbox", { name: "Crop", exact: true }).fill("Smoke test tomato");
   await page.getByRole("spinbutton", { name: "Quantity" }).fill("2");
   await page.getByRole("button", { name: "Save harvest" }).click();
   await expect(page.getByText("Smoke test tomato")).toBeVisible();
