@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { WEB3FORMS_ACCESS_KEY } from "@/lib/contactConfig";
 
 const OPTIONS = [
   "Vegetable starts",
@@ -16,7 +17,6 @@ const OPTIONS = [
 export default function AvailabilityInterestForm() {
   const [status, setStatus] = useState("idle");
   const [message, setMessage] = useState("");
-  const accessKey = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY || "";
 
   async function submit(event) {
     event.preventDefault();
@@ -32,13 +32,7 @@ export default function AvailabilityInterestForm() {
       return;
     }
 
-    if (!accessKey) {
-      setStatus("error");
-      setMessage("Availability alerts are being connected. Please use the contact page for now.");
-      return;
-    }
-
-    data.append("access_key", accessKey);
+    data.append("access_key", WEB3FORMS_ACCESS_KEY);
     data.append("subject", "Price Family Farm availability interest");
     data.append("from_name", "Price Family Farm website");
     data.set("message", `Availability interests: ${interests.join(", ")}. Notes: ${data.get("notes") || "None"}`);
