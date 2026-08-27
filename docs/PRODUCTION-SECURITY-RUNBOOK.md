@@ -36,7 +36,7 @@ aws sts get-caller-identity
 Then run:
 
 ```bash
-scripts/discover-production-aws.sh
+bash scripts/discover-production-aws.sh
 ```
 
 The helper searches CloudFront for the exact alias `price-family-farm.alecjprice.com`. If exactly one matching distribution is found, it prints copy/paste exports similar to:
@@ -52,7 +52,7 @@ If the bucket cannot be inferred safely, find the bucket name in **CloudFront â†
 ## 3. Audit the existing AWS edge security (read only)
 
 ```bash
-scripts/audit-edge-security.sh
+bash scripts/audit-edge-security.sh
 ```
 
 This requires `PFF_BUCKET` and `PFF_DISTRIBUTION_ID` to be exported from step 2.
@@ -62,7 +62,7 @@ Save the output. A failure is usefulâ€”it tells you exactly what still needs har
 ## 4. Preview the CloudFront response-header change (read only)
 
 ```bash
-scripts/apply-cloudfront-security.sh
+bash scripts/apply-cloudfront-security.sh
 ```
 
 Default behavior is dry run. It:
@@ -81,7 +81,7 @@ Stop if the AWS account, alias, distribution, or current configuration is unexpe
 Only after step 4 looks correct:
 
 ```bash
-APPLY=1 scripts/apply-cloudfront-security.sh
+APPLY=1 bash scripts/apply-cloudfront-security.sh
 ```
 
 The helper updates/creates the custom response-headers policy and attaches it to the default cache behavior using CloudFront's current ETag. It then waits for CloudFront to finish deploying and runs the full edge audit when `PFF_BUCKET` is set.
@@ -91,7 +91,7 @@ AWS documents that a response-headers policy must be attached to a cache behavio
 ## 6. Verify the live viewer response
 
 ```bash
-scripts/verify-live-security.sh https://price-family-farm.alecjprice.com/
+bash scripts/verify-live-security.sh https://price-family-farm.alecjprice.com/
 ```
 
 Expected checks include:
@@ -155,8 +155,8 @@ Before any `--delete` deploy, confirm the intended production route inventory ha
 After any production deployment:
 
 ```bash
-scripts/verify-live-security.sh https://price-family-farm.alecjprice.com/
-scripts/audit-edge-security.sh
+bash scripts/verify-live-security.sh https://price-family-farm.alecjprice.com/
+bash scripts/audit-edge-security.sh
 ```
 
 Then manually test:
