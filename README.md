@@ -2,22 +2,23 @@
 
 Public farm website and growing digital farm record for **Price Family Farm in Greeneville, Tennessee**.
 
-Built with **Next.js 15.5** and **React 19** and configured for a fully static export suitable for S3 + CloudFront. Live weather is fetched in the visitor browser from the National Weather Service; the site does not require an application server for weather.
+Built with **Next.js 16.3.3** and **React 19.2.4** and configured for a fully static export suitable for S3 + CloudFront. Live weather is fetched in the visitor browser from the National Weather Service; the site does not require an application server for weather.
 
 ## Farm OS V2
 
-This branch adds an operational layer without turning private farm notes into public website content:
+The operational layer keeps private farm notes separate from public website content:
 
 - `/farm-records` — browser-local harvest, sales, experiment, and direct-expense records
 - JSON backup/restore and CSV export for farm records
 - `/funding` — browser-local funding, cost-share, certification, education, deadline, and next-action tracker
 - `/available` — conservative seasonal availability page plus interest-list capture; it never treats future production as confirmed inventory
-- `/weather` — NWS area forecast with a cached/explicit unavailable fallback; it never invents current weather values
+- `/weather` — NWS area forecast with cached/explicit unavailable fallback; it never invents current weather values
+- `/privacy-tools` — explicit browser-local data controls
 - task-oriented primary navigation: **Home · Farm · Plan · Learn · Contact**
 - private operating pages are `noindex` and excluded from the sitemap
-- contact and availability forms share one Web3Forms configuration and include validation + honeypot fields
+- contact and availability forms share one Web3Forms configuration and include validation, throttling, timeout handling, fail-closed behavior, and honeypot fields
 
-Private Farm OS records use `localStorage`. They are device/browser specific unless exported and restored. They are intentionally not synchronized to a public backend in this pass.
+Private Farm OS records use `localStorage`. They are device/browser specific unless exported and restored. They are intentionally not synchronized to a public backend.
 
 ## Run locally
 
@@ -28,21 +29,17 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Release gate
+## Release gates
 
 ```bash
+npm audit --audit-level=high
+npm run lint
 node scripts/verify-farm-os.mjs
+node scripts/verify-security.mjs
 npm run build
 ```
 
-Pull requests also run a GitHub Actions quality gate that:
-
-1. installs from the lockfile
-2. verifies Farm OS contracts
-3. builds the static export
-4. serves `out/`
-5. runs Playwright smoke tests at small-phone, tablet, and desktop viewports
-6. checks persistence, availability honesty, weather fallback, navigation, and horizontal overflow
+Pull requests and `main` also run GitHub Actions quality gates plus CodeQL security analysis.
 
 ## Static hosting
 
@@ -52,16 +49,38 @@ Pull requests also run a GitHub Actions quality gate that:
 - `trailingSlash: true`
 - unoptimized Next images for static hosting
 
-Build output is written to `out/` and can be synchronized to the existing S3/CloudFront hosting layer after the release gate is green.
+Build output is written to `out/` and can be synchronized to the existing S3/CloudFront hosting layer after the release gates and production-parity checks are green.
 
 Set `NEXT_PUBLIC_SITE_URL=https://price-family-farm.alecjprice.com` in the build environment.
 
 ### Contact form
 
-Web3Forms uses a client-facing access key. The application supports overriding the legacy key with `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY`. Because the key is necessarily present in a static browser bundle, the production domain should be restricted in the Web3Forms dashboard and Web3Forms abuse/spam controls should remain enabled.
+Web3Forms uses a browser-visible access key supplied through `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY`; the production key does not belong in source control. Web3Forms documents Restrict to Domain as a paid/Pro feature. If available, whitelist only `price-family-farm.alecjprice.com`. The free-plan baseline is provider spam filtering plus the site's botcheck, validation, throttling, and timeout controls.
+
+## AWS production security
+
+The repository contains three operator helpers:
+
+```bash
+bash scripts/discover-production-aws.sh
+bash scripts/audit-edge-security.sh
+bash scripts/apply-cloudfront-security.sh
+```
+
+`apply-cloudfront-security.sh` is **dry-run by default**. It verifies the expected production alias and backs up the current CloudFront configuration before offering the mutating command:
+
+```bash
+APPLY=1 bash scripts/apply-cloudfront-security.sh
+```
+
+After CloudFront deploys, verify the viewer headers with:
+
+```bash
+bash scripts/verify-live-security.sh https://price-family-farm.alecjprice.com/
+```
+
+See `docs/PRODUCTION-SECURITY-RUNBOOK.md` for the guided production procedure.
 
 ## Source-of-truth guard
 
-At the start of the 2026-08-27 five-agent pass, the public production site contained newer Farm OS routes and content that were not present on GitHub `main`. This branch therefore stays **draft / non-deployable until production-source parity is verified**. Do not replace the live S3/CloudFront site with an older repository snapshot simply because this branch builds successfully.
-
-The production-source sync is tracked in GitHub issue #3 and the draft pull request for this pass.
+The live production site has historically moved ahead of GitHub. Do not use a destructive S3 sync such as `aws s3 sync ... --delete` until all intended production routes/assets have been reconciled into the deployable repository source. A green compile is not proof of production parity.

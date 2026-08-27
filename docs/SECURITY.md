@@ -41,7 +41,9 @@ npm ci
 npm run build
 ```
 
-In the Web3Forms dashboard, restrict the key to the production farm domain and keep its anti-spam/domain protections enabled.
+The application adds its own validation, a hidden `botcheck` honeypot, client-side submission throttling, timeouts, and fail-closed behavior when the key is missing.
+
+Web3Forms currently documents **Restrict to Domain as a paid/Pro feature**. If the account has that feature, whitelist only `price-family-farm.alecjprice.com` (without `https://`) after testing. If the account is on the free plan, rely on Web3Forms' built-in filtering plus the site's honeypot/throttling controls, and rotate the access key if abuse appears.
 
 ## CloudFront response security headers
 
@@ -52,24 +54,64 @@ In the Web3Forms dashboard, restrict the key to the production farm domain and k
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
 - strict-origin referrer handling
+- Permissions Policy restrictions
+- COOP/CORP isolation headers
 
 Before attaching the policy, review the CSP whenever a new external service is added. The current allowlist expects only the National Weather Service and Web3Forms network calls.
 
-Example creation command:
+### Safe automation
+
+The repository includes a dry-run-first CloudFront helper:
 
 ```bash
-aws cloudfront create-response-headers-policy \
-  --response-headers-policy-config file://deploy/cloudfront-security-headers-policy.json
+bash scripts/discover-production-aws.sh
 ```
 
-Then attach the returned policy ID to the CloudFront distribution's default cache behavior. Do not guess or replace an existing managed response-headers policy without first reading the current distribution config and preserving its ETag.
+It locates the CloudFront distribution by the expected production alias and prints the environment exports you need.
 
-After deployment, verify the live headers with:
+Then preview the change:
 
 ```bash
-curl -sSI https://price-family-farm.alecjprice.com/ | \
-  grep -Ei 'strict-transport-security|content-security-policy|x-frame-options|x-content-type-options|referrer-policy'
+export PFF_DISTRIBUTION_ID='...'
+export PFF_BUCKET='...'
+bash scripts/apply-cloudfront-security.sh
 ```
+
+The script verifies that the distribution actually contains the expected `price-family-farm.alecjprice.com` alias and writes a timestamped backup of the current distribution configuration to `.security-backups/`. **No AWS setting is changed in the default dry-run mode.**
+
+After reviewing the AWS account and distribution, apply the response-headers policy with:
+
+```bash
+APPLY=1 bash scripts/apply-cloudfront-security.sh
+```
+
+The script creates or updates `price-family-farm-security-v1`, attaches it to the default CloudFront cache behavior using the current distribution ETag, waits for deployment, and runs the existing S3/CloudFront audit when `PFF_BUCKET` is set.
+
+Then verify the headers seen by a real browser/client:
+
+```bash
+bash scripts/verify-live-security.sh https://price-family-farm.alecjprice.com/
+```
+
+## S3 + CloudFront read-only audit
+
+Run:
+
+```bash
+PFF_BUCKET='...' PFF_DISTRIBUTION_ID='...' bash scripts/audit-edge-security.sh
+```
+
+It checks:
+
+- all four S3 Block Public Access controls;
+- bucket-policy public status;
+- default bucket encryption;
+- CloudFront HTTPS enforcement;
+- minimum TLS policy;
+- a response-headers policy attached to the default behavior;
+- CloudFront origin access protection (OAC or legacy OAI) for S3 REST origins.
+
+The audit does not mutate AWS resources.
 
 ## Release gates
 
@@ -77,13 +119,19 @@ Pull requests and `main` run:
 
 1. `npm ci`
 2. `npm audit --audit-level=high`
-3. Farm OS contract checks
-4. static security contract checks
-5. production static build
-6. responsive Playwright smoke tests
-7. CodeQL `security-extended` analysis
+3. ESLint
+4. shell automation syntax validation
+5. Farm OS contract checks
+6. static security contract checks
+7. production static build
+8. responsive/security Playwright tests
+9. CodeQL `security-extended` analysis
 
 Do not deploy when any required gate is red.
+
+## Production parity
+
+A secure deployment must also preserve production functionality. The live farm site historically contained routes that were ahead of GitHub. Do not use `aws s3 sync ... --delete` until the route/content parity check has been completed and all intended production-only functionality is represented in the deployable source.
 
 ## Reporting a security issue
 
