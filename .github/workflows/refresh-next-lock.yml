@@ -1,4 +1,4 @@
-name: Refresh patched Next.js lockfile
+name: Refresh patched framework lockfile
 
 on:
   push:
@@ -24,8 +24,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Update patched Next.js release and lockfile
-        run: npm install --package-lock-only --save-exact next@15.5.24 eslint-config-next@15.5.24
+      - name: Update patched framework and React releases
+        run: npm install --package-lock-only --save-exact next@16.3.3 eslint-config-next@16.3.3 react@19.2.4 react-dom@19.2.4
+      - name: Apply compatible transitive audit fixes
+        run: npm audit fix --package-lock-only || true
       - name: Capture remaining dependency advisories
         run: npm audit --json > audit.json || true
       - name: Commit generated manifest and lockfile
@@ -34,7 +36,7 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add package.json package-lock.json
-            git commit -m "Patch Next.js security advisories"
+            git commit -m "Upgrade patched Next.js and React runtime"
             git pull --rebase origin agents/security-hardening-pass-2026-08-27
             git push origin HEAD:agents/security-hardening-pass-2026-08-27
           else
@@ -50,7 +52,7 @@ jobs:
           const rows = Object.entries(audit.vulnerabilities || {})
             .filter(([, value]) => ['high', 'critical'].includes(value.severity))
             .map(([name, value]) => `- **${name}** — ${value.severity}; affected: ${value.range}; fix available: ${JSON.stringify(value.fixAvailable)}`);
-          console.log('### Dependency audit after Next.js patch');
+          console.log('### Dependency audit after framework security upgrade');
           console.log('');
           console.log(rows.length ? rows.join('\n') : 'No high or critical advisories remain.');
           NODE
