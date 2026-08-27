@@ -11,7 +11,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,7 +24,19 @@ jobs:
         run: npm ci
       - name: Farm OS contracts
         run: node scripts/verify-farm-os.mjs
-      - name: Production build
+      - name: Production static build
         env:
           NEXT_PUBLIC_SITE_URL: https://price-family-farm.alecjprice.com
         run: npm run build
+      - name: Install browser test runner
+        run: |
+          npm install --no-save @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve static export
+        run: |
+          python3 -m http.server 4173 --directory out > /tmp/farm-site-http.log 2>&1 &
+          for i in {1..20}; do curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0; sleep 1; done
+          cat /tmp/farm-site-http.log
+          exit 1
+      - name: Responsive and interaction smoke tests
+        run: npx playwright test
