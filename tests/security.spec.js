@@ -56,3 +56,27 @@ test("weather feed refuses a forecast URL outside api.weather.gov", async ({ pag
   await expect(page.getByText("No weather values are being guessed")).toBeVisible({ timeout: 10_000 });
   expect(untrustedOriginRequested).toBe(false);
 });
+
+test("privacy tools require explicit confirmation and preserve unselected cache", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("price-family-farm-records-v2", JSON.stringify({ harvests: [], experiments: [], expenses: [] }));
+    localStorage.setItem("price-family-farm-funding-v1", JSON.stringify([]));
+    localStorage.setItem("price-family-farm-weather-v1", JSON.stringify({ periods: [], savedAt: Date.now() }));
+  });
+
+  await page.goto("/privacy-tools/");
+  const clearButton = page.getByRole("button", { name: "Clear selected local data" });
+  await expect(clearButton).toBeDisabled();
+  await page.getByRole("textbox", { name: "Type CLEAR to confirm" }).fill("CLEAR");
+  await expect(clearButton).toBeEnabled();
+  await clearButton.click();
+
+  const stored = await page.evaluate(() => ({
+    records: localStorage.getItem("price-family-farm-records-v2"),
+    funding: localStorage.getItem("price-family-farm-funding-v1"),
+    weather: localStorage.getItem("price-family-farm-weather-v1"),
+  }));
+  expect(stored.records).toBeNull();
+  expect(stored.funding).toBeNull();
+  expect(stored.weather).not.toBeNull();
+});
