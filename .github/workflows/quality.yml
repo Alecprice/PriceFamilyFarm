@@ -33,14 +33,47 @@ jobs:
       - name: Audit dependency vulnerabilities
         run: npm audit --audit-level=high
 
+      - name: Lint source
+        id: lint
+        run: |
+          set -o pipefail
+          npm run lint 2>&1 | tee lint.log
+
       - name: Farm OS contracts
         run: node scripts/verify-farm-os.mjs
 
       - name: Security contracts
-        run: node scripts/verify-security.mjs
+        id: security
+        run: |
+          set -o pipefail
+          node scripts/verify-security.mjs 2>&1 | tee security.log
+
+      - name: Report lint or security-contract failure
+        if: failure() && github.event_name == 'pull_request' && (steps.lint.outcome == 'failure' || steps.security.outcome == 'failure')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "### Automated source/security gate failure"
+            echo
+            if [ -f lint.log ]; then
+              echo "#### Lint"
+              echo '```text'
+              tail -n 120 lint.log
+              echo '```'
+            fi
+            if [ -f security.log ]; then
+              echo "#### Security contracts"
+              echo '```text'
+              tail -n 120 security.log
+              echo '```'
+            fi
+          } > /tmp/source-security-comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/source-security-comment.md
 
       - name: Production static build
         id: build
+        if: success()
         env:
           NEXT_PUBLIC_SITE_URL: https://price-family-farm.alecjprice.com
           # CI only: the real browser key is injected by the production build environment.
@@ -106,6 +139,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
           path: |
+            lint.log
+            security.log
             build.log
             playwright.log
             test-results/
