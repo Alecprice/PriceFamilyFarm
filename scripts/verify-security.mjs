@@ -6,6 +6,10 @@ const failures = [];
 const checks = [];
 const SKIP_DIRS = new Set([".git", ".next", "node_modules", "out", "coverage", "test-results", "playwright-report"]);
 const TEXT_EXTENSIONS = new Set([".js", ".jsx", ".mjs", ".cjs", ".json", ".md", ".yml", ".yaml", ".txt", ".html", ".css"]);
+const NON_NETWORK_HTTP_IDENTIFIERS = new Set([
+  "http://www.w3.org/2000/svg",
+  "http://www.w3.org/1999/xlink",
+]);
 
 function expect(condition, label) {
   checks.push(label);
@@ -92,9 +96,17 @@ for (const file of runtimeFiles.filter((file) => /\.(jsx?|mjs)$/.test(file))) {
     expect(/rel=["'][^"']*(?:noopener|noreferrer)[^"']*["']/.test(match[0]), `${relative} protects target=_blank links`);
   }
   for (const match of source.matchAll(/http:\/\/[^\s"'`)]+/g)) {
-    expect(/^http:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?(?:\/|$)/.test(match[0]), `${relative} has no insecure external HTTP URLs`);
+    const candidate = match[0].replace(/[>,.;]+$/, "");
+    const allowedIdentifier = NON_NETWORK_HTTP_IDENTIFIERS.has(candidate);
+    const allowedLocalhost = /^http:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?(?:\/|$)/.test(candidate);
+    expect(allowedIdentifier || allowedLocalhost, `${relative} has no insecure external HTTP URLs`);
   }
 }
+
+const privacyPage = read("app/privacy-tools/page.js");
+expect(privacyPage.includes("index: false"), "privacy tools page is noindex");
+const robots = read("app/robots.js");
+expect(robots.includes('"/privacy-tools"'), "robots policy disallows privacy tools route");
 
 expect(!fs.existsSync(path.join(root, ".env")), ".env is not committed");
 expect(!fs.existsSync(path.join(root, ".env.local")), ".env.local is not committed");
