@@ -39,6 +39,15 @@ jobs:
           set -o pipefail
           npm run lint 2>&1 | tee lint.log
 
+      - name: Validate shell automation syntax
+        id: shell
+        run: |
+          set -o pipefail
+          for script in scripts/*.sh; do
+            echo "Checking $script"
+            bash -n "$script"
+          done 2>&1 | tee shell.log
+
       - name: Farm OS contracts
         run: node scripts/verify-farm-os.mjs
 
@@ -49,7 +58,7 @@ jobs:
           node scripts/verify-security.mjs 2>&1 | tee security.log
 
       - name: Report lint or security-contract failure
-        if: failure() && github.event_name == 'pull_request' && (steps.lint.outcome == 'failure' || steps.security.outcome == 'failure')
+        if: failure() && github.event_name == 'pull_request' && (steps.lint.outcome == 'failure' || steps.shell.outcome == 'failure' || steps.security.outcome == 'failure')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -60,6 +69,12 @@ jobs:
               echo "#### Lint"
               echo '```text'
               tail -n 120 lint.log
+              echo '```'
+            fi
+            if [ -f shell.log ]; then
+              echo "#### Shell automation"
+              echo '```text'
+              tail -n 120 shell.log
               echo '```'
             fi
             if [ -f security.log ]; then
@@ -140,6 +155,7 @@ jobs:
           retention-days: 7
           path: |
             lint.log
+            shell.log
             security.log
             build.log
             playwright.log
