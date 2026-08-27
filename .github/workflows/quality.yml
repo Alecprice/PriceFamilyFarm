@@ -115,7 +115,8 @@ jobs:
         if: success()
         run: |
           npm install --no-save @playwright/test@1.55.0
-          npx playwright install --with-deps chromium
+          # The iPhone device profile uses WebKit while tablet/desktop use Chromium.
+          npx playwright install --with-deps chromium webkit
 
       - name: Serve static export
         if: success()
