@@ -1,0 +1,5 @@
+Contact: https://price-family-farm.alecjprice.com/contact/
+Expires: 2027-08-27T23:59:59Z
+Preferred-Languages: en
+Canonical: https://price-family-farm.alecjprice.com/.well-known/security.txt
+Policy: https://price-family-farm.alecjprice.com/contact/

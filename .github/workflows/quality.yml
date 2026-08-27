@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
@@ -12,26 +16,72 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
       - name: Use Node 22
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
+
       - name: Install dependencies
         run: npm ci
+
+      - name: Audit dependency vulnerabilities
+        run: npm audit --audit-level=high
+
+      - name: Lint source
+        id: lint
+        run: |
+          set -o pipefail
+          npm run lint 2>&1 | tee lint.log
+
       - name: Farm OS contracts
         run: node scripts/verify-farm-os.mjs
+
+      - name: Security contracts
+        id: security
+        run: |
+          set -o pipefail
+          node scripts/verify-security.mjs 2>&1 | tee security.log
+
+      - name: Report lint or security-contract failure
+        if: failure() && github.event_name == 'pull_request' && (steps.lint.outcome == 'failure' || steps.security.outcome == 'failure')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "### Automated source/security gate failure"
+            echo
+            if [ -f lint.log ]; then
+              echo "#### Lint"
+              echo '```text'
+              tail -n 120 lint.log
+              echo '```'
+            fi
+            if [ -f security.log ]; then
+              echo "#### Security contracts"
+              echo '```text'
+              tail -n 120 security.log
+              echo '```'
+            fi
+          } > /tmp/source-security-comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/source-security-comment.md
+
       - name: Production static build
         id: build
+        if: success()
         env:
           NEXT_PUBLIC_SITE_URL: https://price-family-farm.alecjprice.com
+          # CI only: the real browser key is injected by the production build environment.
+          NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY: 00000000-0000-4000-8000-000000000000
         run: |
           set -o pipefail
           npm run build 2>&1 | tee build.log
+
       - name: Report build failure
         if: failure() && steps.build.outcome == 'failure' && github.event_name == 'pull_request'
         env:
@@ -41,15 +91,17 @@ jobs:
             echo "### Automated build gate failure"
             echo
             echo '```text'
-            tail -n 120 build.log
+            tail -n 140 build.log
             echo '```'
           } > /tmp/build-comment.md
           gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/build-comment.md
+
       - name: Install browser test runner
         if: success()
         run: |
           npm install --no-save @playwright/test@1.55.0
           npx playwright install --with-deps chromium
+
       - name: Serve static export
         if: success()
         run: |
@@ -57,6 +109,39 @@ jobs:
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0; sleep 1; done
           cat /tmp/farm-site-http.log
           exit 1
+
       - name: Responsive and interaction smoke tests
         if: success()
-        run: npx playwright test
+        id: browser
+        run: |
+          set -o pipefail
+          npx playwright test --reporter=line 2>&1 | tee playwright.log
+
+      - name: Report browser-test failure
+        if: failure() && steps.browser.outcome == 'failure' && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "### Automated browser gate failure"
+            echo
+            echo '```text'
+            tail -n 180 playwright.log
+            echo '```'
+          } > /tmp/browser-comment.md
+          gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/browser-comment.md
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: farm-site-quality-diagnostics
+          if-no-files-found: ignore
+          retention-days: 7
+          path: |
+            lint.log
+            security.log
+            build.log
+            playwright.log
+            test-results/
+            playwright-report/
