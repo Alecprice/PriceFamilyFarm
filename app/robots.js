@@ -7,7 +7,7 @@ export default function robots() {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/farm-records", "/funding"],
+      disallow: ["/farm-records", "/funding", "/privacy-tools"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };
