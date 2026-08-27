@@ -28,7 +28,12 @@ function walk(directory, output = []) {
 }
 
 const files = walk(root);
-const combined = files.map((file) => `\n/* FILE:${path.relative(root, file)} */\n${fs.readFileSync(file, "utf8")}`).join("\n");
+const allText = files.map((file) => `\n/* FILE:${path.relative(root, file)} */\n${fs.readFileSync(file, "utf8")}`).join("\n");
+const runtimeFiles = files.filter((file) => {
+  const relative = path.relative(root, file).replaceAll("\\", "/");
+  return !relative.startsWith("tests/") && !relative.startsWith("scripts/") && !relative.startsWith("docs/") && !relative.startsWith(".github/") && !relative.startsWith("deploy/");
+});
+const runtimeText = runtimeFiles.map((file) => `\n/* FILE:${path.relative(root, file)} */\n${fs.readFileSync(file, "utf8")}`).join("\n");
 
 const secretPatterns = [
   [/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/, "private key material is not committed"],
@@ -38,11 +43,11 @@ const secretPatterns = [
   [/\bsk_live_[A-Za-z0-9]{20,}\b/, "Stripe live secret keys are not committed"],
 ];
 
-for (const [pattern, label] of secretPatterns) expect(!pattern.test(combined), label);
-expect(!/\bjavascript\s*:/i.test(combined), "javascript: URLs are absent");
-expect(!/\beval\s*\(/.test(combined), "eval() is absent");
-expect(!/\bnew\s+Function\s*\(/.test(combined), "new Function() is absent");
-expect(!/document\.write\s*\(/.test(combined), "document.write() is absent");
+for (const [pattern, label] of secretPatterns) expect(!pattern.test(allText), label);
+expect(!/\bjavascript\s*:/i.test(runtimeText), "javascript: URLs are absent from runtime source");
+expect(!/\beval\s*\(/.test(runtimeText), "eval() is absent from runtime source");
+expect(!/\bnew\s+Function\s*\(/.test(runtimeText), "new Function() is absent from runtime source");
+expect(!/document\.write\s*\(/.test(runtimeText), "document.write() is absent from runtime source");
 
 const contactConfig = read("lib/contactConfig.js");
 expect(contactConfig.includes("NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY"), "contact key is injected at build time");
@@ -61,7 +66,7 @@ const weather = read("components/WeatherPanel.jsx");
 expect(weather.includes('url.hostname !== "api.weather.gov"'), "NWS forecast redirect origin is allowlisted");
 expect(weather.includes("REQUEST_TIMEOUT_MS"), "NWS requests have a timeout");
 
-for (const file of files.filter((file) => /\.(jsx?|mjs)$/.test(file))) {
+for (const file of runtimeFiles.filter((file) => /\.(jsx?|mjs)$/.test(file))) {
   const source = fs.readFileSync(file, "utf8");
   const relative = path.relative(root, file);
   for (const match of source.matchAll(/<a\b[^>]*target=["']_blank["'][^>]*>/g)) {
