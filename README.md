@@ -1,100 +1,67 @@
-# Price Family Farm — Next.js site
+# Price Family Farm
 
-Built with **Next.js 15** (App Router) and **React 19**. Same content and
-design as the static version, now as a proper React app with routing,
-a shared `Nav`/`Footer`, and a client-side lightbox on the Gallery page.
+Public farm website and growing digital farm record for **Price Family Farm in Greeneville, Tennessee**.
 
-## Run it locally
+Built with **Next.js 15.5** and **React 19** and configured for a fully static export suitable for S3 + CloudFront. Live weather is fetched in the visitor browser from the National Weather Service; the site does not require an application server for weather.
+
+## Farm OS V2
+
+This branch adds an operational layer without turning private farm notes into public website content:
+
+- `/farm-records` — browser-local harvest, sales, experiment, and direct-expense records
+- JSON backup/restore and CSV export for farm records
+- `/funding` — browser-local funding, cost-share, certification, education, deadline, and next-action tracker
+- `/available` — conservative seasonal availability page plus interest-list capture; it never treats future production as confirmed inventory
+- `/weather` — NWS area forecast with a cached/explicit unavailable fallback; it never invents current weather values
+- task-oriented primary navigation: **Home · Farm · Plan · Learn · Contact**
+- private operating pages are `noindex` and excluded from the sitemap
+- contact and availability forms share one Web3Forms configuration and include validation + honeypot fields
+
+Private Farm OS records use `localStorage`. They are device/browser specific unless exported and restored. They are intentionally not synchronized to a public backend in this pass.
+
+## Run locally
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Then open http://localhost:3000. The site needs an internet connection on
-first run/build so `next/font` can fetch Fraunces, Public Sans, and Space
-Mono from Google Fonts (they're then self-hosted from your own domain —
-no runtime calls to Google after that).
+Open `http://localhost:3000`.
 
-## Build for production
+## Release gate
 
 ```bash
+node scripts/verify-farm-os.mjs
 npm run build
-npm run start
 ```
 
-## Project structure
+Pull requests also run a GitHub Actions quality gate that:
 
-```
-app/
-  layout.js          root layout, fonts, global <head>
-  globals.css         all design tokens + styles (ported from the static site)
-  page.js              Home
-  our-story/page.js    Our Story (season timeline)
-  what-we-grow/page.js What We Grow
-  how-we-grow/page.js  How We Grow
-  documentation/page.js Documentation (TN farm registration process)
-  gallery/page.js      Gallery (uses the Lightbox provider)
-components/
-  Nav.jsx              client component, highlights the active route
-  Footer.jsx
-  Lightbox.jsx          click-to-enlarge gallery viewer (client component)
-  GalleryImage.jsx      individual gallery photo, opens the Lightbox
-public/images/          all site photos
-```
+1. installs from the lockfile
+2. verifies Farm OS contracts
+3. builds the static export
+4. serves `out/`
+5. runs Playwright smoke tests at small-phone, tablet, and desktop viewports
+6. checks persistence, availability honesty, weather fallback, navigation, and horizontal overflow
 
-## Deploying
+## Static hosting
 
-This is a standard Next.js app, so it deploys as-is to **Vercel** (just
-import the repo), or anywhere that runs Node — Netlify, Render, a VPS, etc.
-No environment variables are required to run it, though setting
-`NEXT_PUBLIC_SITE_URL` (e.g. `https://pricefamilyfarm.com`) will make the
-sitemap and robots.txt point at your real domain instead of a placeholder.
+`next.config.mjs` uses:
 
-Image optimization is on (`next/image`). `sharp`, the library that powers
-it, installs automatically as an optional dependency of Next.js itself, so
-this works both locally and on Vercel with no extra setup.
+- `output: "export"`
+- `trailingSlash: true`
+- unoptimized Next images for static hosting
 
-## SEO
+Build output is written to `out/` and can be synchronized to the existing S3/CloudFront hosting layer after the release gate is green.
 
-- `app/sitemap.js` and `app/robots.js` auto-generate `/sitemap.xml` and
-  `/robots.txt`.
-- The home page includes `LocalBusiness` JSON-LD structured data.
-- Every recipe on `/recipes` includes `Recipe` JSON-LD structured data
-  (ingredients, instructions, yield, time), built in `lib/recipeSchema.js`.
-  This makes recipes eligible for Google's recipe rich results. Ratings and
-  a hero image are deliberately left out since we don't have real reviews
-  or finished-dish photography, fabricating either violates Google's
-  structured data guidelines and risks a manual penalty.
-- Each major page has its own auto-generated **Open Graph preview image**
-  (`opengraph-image.jsx` in each route folder), built from a shared branded
-  template in `lib/ogImage.jsx`, no photography needed. This is what shows
-  up as the preview card when a link is shared on social media, iMessage,
-  Slack, etc.
-- Set `NEXT_PUBLIC_SITE_URL` (e.g. `https://pricefamilyfarm.com`) once you
-  have a real domain. It's used by the sitemap, robots.txt, recipe schema
-  URLs, and to correctly resolve the Open Graph image URLs, all default to
-  a placeholder until it's set.
-- Each page has its own `<title>` and meta description.
+Set `NEXT_PUBLIC_SITE_URL=https://price-family-farm.alecjprice.com` in the build environment.
 
-## Contact form setup
+### Contact form
 
-The `/contact` page uses [Web3Forms](https://web3forms.com) to send submissions
-straight to an email inbox, no backend code, no server to run.
+Web3Forms uses a client-facing access key. The application supports overriding the legacy key with `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY`. Because the key is necessarily present in a static browser bundle, the production domain should be restricted in the Web3Forms dashboard and Web3Forms abuse/spam controls should remain enabled.
 
-**Already configured** — the access key in `components/ContactForm.jsx` is
-live, submissions go straight to the inbox that was used to generate it.
-Nothing further needed; just deploy.
+## Source-of-truth guard
 
-If you ever need to point it at a different inbox: go to
-https://web3forms.com, enter the new email address, it emails you a fresh
-**Access Key** immediately (free, no account required), then swap the
-`WEB3FORMS_ACCESS_KEY` value in `components/ContactForm.jsx`.
+At the start of the 2026-08-27 five-agent pass, the public production site contained newer Farm OS routes and content that were not present on GitHub `main`. This branch therefore stays **draft / non-deployable until production-source parity is verified**. Do not replace the live S3/CloudFront site with an older repository snapshot simply because this branch builds successfully.
 
-## Notes
-
-- No email address or phone number is published anywhere on the site.
-  Visitors reach out through the `/contact` form instead, "Greeneville,
-  East Tennessee" is the only public location info.
-- The Documentation page describes the Tennessee farm-registration process
-  in plain language; it does not embed the scanned tax/legal documents.
+The production-source sync is tracked in GitHub issue #3 and the draft pull request for this pass.

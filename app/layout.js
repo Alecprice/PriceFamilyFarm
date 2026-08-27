@@ -1,5 +1,6 @@
 import { Fraunces, Public_Sans, Space_Mono } from "next/font/google";
 import "./globals.css";
+import "./farm-os.css";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -23,13 +24,13 @@ const spaceMono = Space_Mono({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://price-family-farm.alecjprice.com";
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: "Price Family Farm · Greeneville, East Tennessee",
   description:
-    "Price Family Farm is a family-run orchard, greenhouse, and market garden in Greeneville, East Tennessee. Follow the build, what we grow, and how we grow it.",
+    "Price Family Farm is a family-run orchard, greenhouse, and market garden in Greeneville, East Tennessee. Follow the farm, use practical growing tools, and see what is available seasonally.",
 };
 
 export default function RootLayout({ children }) {

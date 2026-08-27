@@ -1,9 +1,10 @@
 import { ImageResponse } from "next/og";
 import { ogElement, ogSize, ogContentType } from "@/lib/ogImage";
 
+export const dynamic = "force-static";
 export const size = ogSize;
 export const contentType = ogContentType;
-export const alt = "Our Story \u2014 Price Family Farm";
+export const alt = "Our Story — Price Family Farm";
 
 const TITLE = ["One growing season,", "bare root to registered farm."];
 

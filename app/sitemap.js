@@ -1,4 +1,6 @@
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://example.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://price-family-farm.alecjprice.com";
+
+export const dynamic = "force-static";
 
 export default function sitemap() {
   const routes = [
@@ -12,13 +14,15 @@ export default function sitemap() {
     "/heritage",
     "/documentation",
     "/gallery",
+    "/available",
+    "/weather",
     "/contact",
   ];
 
   return routes.map((route) => ({
     url: `${SITE_URL}${route}`,
     lastModified: new Date(),
-    changeFrequency: route === "" ? "weekly" : "monthly",
-    priority: route === "" ? 1 : 0.7,
+    changeFrequency: route === "/available" || route === "/weather" ? "daily" : "monthly",
+    priority: route === "" ? 1 : route === "/available" ? 0.9 : 0.7,
   }));
 }

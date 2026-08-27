@@ -1,9 +1,10 @@
 import { ImageResponse } from "next/og";
 import { ogElement, ogSize, ogContentType } from "@/lib/ogImage";
 
+export const dynamic = "force-static";
 export const size = ogSize;
 export const contentType = ogContentType;
-export const alt = "Heritage \u2014 Price Family Farm";
+export const alt = "Heritage — Price Family Farm";
 
 const TITLE = ["Two hundred and fifty years", "of farming this valley."];
 
