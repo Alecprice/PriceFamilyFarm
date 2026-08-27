@@ -1,16 +1,40 @@
 "use client";
 
-import { useState } from "react";
-import { WEB3FORMS_ACCESS_KEY } from "@/lib/contactConfig";
+import { useRef, useState } from "react";
+import {
+  WEB3FORMS_ACCESS_KEY,
+  WEB3FORMS_ENDPOINT,
+  contactFormsConfigured,
+} from "@/lib/contactConfig";
+
+const MIN_SUBMIT_INTERVAL_MS = 15_000;
+const REQUEST_TIMEOUT_MS = 15_000;
 
 export default function ContactForm() {
   const [status, setStatus] = useState("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const lastSubmitAt = useRef(0);
+  const configured = contactFormsConfigured();
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (!configured) {
+      setStatus("error");
+      setErrorMsg("The contact form is temporarily unavailable while its secure delivery configuration is being updated.");
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastSubmitAt.current < MIN_SUBMIT_INTERVAL_MS) {
+      setStatus("error");
+      setErrorMsg("Please wait a few seconds before sending another message.");
+      return;
+    }
+
     setStatus("sending");
     setErrorMsg("");
+    lastSubmitAt.current = now;
 
     const form = event.currentTarget;
     const formData = new FormData(form);
@@ -18,19 +42,28 @@ export default function ContactForm() {
     formData.append("subject", `Price Family Farm contact form: ${formData.get("topic") || "General"}`);
     formData.append("from_name", "Price Family Farm website");
 
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
     try {
-      const response = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch(WEB3FORMS_ENDPOINT, {
         method: "POST",
         headers: { Accept: "application/json" },
         body: formData,
+        cache: "no-store",
+        credentials: "omit",
+        referrerPolicy: "strict-origin-when-cross-origin",
+        signal: controller.signal,
       });
-      const data = await response.json();
-      if (!response.ok || !data.success) throw new Error(data.message || "submit-failed");
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success) throw new Error("submit-failed");
       setStatus("success");
       form.reset();
     } catch {
       setStatus("error");
-      setErrorMsg("Couldn’t reach the form service. Check your connection and try again.");
+      setErrorMsg("Couldn’t send the message. Check your connection and try again in a moment.");
+    } finally {
+      window.clearTimeout(timeout);
     }
   }
 
@@ -46,7 +79,7 @@ export default function ContactForm() {
 
   return (
     <form className="contact-form" onSubmit={handleSubmit}>
-      <input type="checkbox" name="botcheck" style={{ display: "none" }} tabIndex={-1} autoComplete="off" />
+      <input type="checkbox" name="botcheck" style={{ display: "none" }} tabIndex={-1} autoComplete="off" aria-hidden="true" />
 
       <div className="form-row">
         <label htmlFor="name">Name</label>
@@ -75,9 +108,14 @@ export default function ContactForm() {
         <textarea id="message" name="message" rows={6} required minLength={10} maxLength={2000} />
       </div>
 
-      {status === "error" ? <p className="form-error" role="alert">{errorMsg}</p> : null}
+      {!configured ? (
+        <p className="form-error" role="status">
+          Contact delivery is temporarily disabled until the production form key is supplied at build time.
+        </p>
+      ) : null}
+      {status === "error" && errorMsg ? <p className="form-error" role="alert">{errorMsg}</p> : null}
 
-      <button type="submit" className="btn btn-clay" style={{ border: "1px solid var(--clay)" }} disabled={status === "sending"}>
+      <button type="submit" className="btn btn-clay" style={{ border: "1px solid var(--clay)" }} disabled={status === "sending" || !configured}>
         {status === "sending" ? "Sending…" : "Send message"}
       </button>
     </form>
