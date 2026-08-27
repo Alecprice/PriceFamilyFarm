@@ -64,7 +64,7 @@ Before attaching the policy, review the CSP whenever a new external service is a
 The repository includes a dry-run-first CloudFront helper:
 
 ```bash
-scripts/discover-production-aws.sh
+bash scripts/discover-production-aws.sh
 ```
 
 It locates the CloudFront distribution by the expected production alias and prints the environment exports you need.
@@ -74,7 +74,7 @@ Then preview the change:
 ```bash
 export PFF_DISTRIBUTION_ID='...'
 export PFF_BUCKET='...'
-scripts/apply-cloudfront-security.sh
+bash scripts/apply-cloudfront-security.sh
 ```
 
 The script verifies that the distribution actually contains the expected `price-family-farm.alecjprice.com` alias and writes a timestamped backup of the current distribution configuration to `.security-backups/`. **No AWS setting is changed in the default dry-run mode.**
@@ -82,7 +82,7 @@ The script verifies that the distribution actually contains the expected `price-
 After reviewing the AWS account and distribution, apply the response-headers policy with:
 
 ```bash
-APPLY=1 scripts/apply-cloudfront-security.sh
+APPLY=1 bash scripts/apply-cloudfront-security.sh
 ```
 
 The script creates or updates `price-family-farm-security-v1`, attaches it to the default CloudFront cache behavior using the current distribution ETag, waits for deployment, and runs the existing S3/CloudFront audit when `PFF_BUCKET` is set.
@@ -90,7 +90,7 @@ The script creates or updates `price-family-farm-security-v1`, attaches it to th
 Then verify the headers seen by a real browser/client:
 
 ```bash
-scripts/verify-live-security.sh https://price-family-farm.alecjprice.com/
+bash scripts/verify-live-security.sh https://price-family-farm.alecjprice.com/
 ```
 
 ## S3 + CloudFront read-only audit
@@ -98,7 +98,7 @@ scripts/verify-live-security.sh https://price-family-farm.alecjprice.com/
 Run:
 
 ```bash
-PFF_BUCKET='...' PFF_DISTRIBUTION_ID='...' scripts/audit-edge-security.sh
+PFF_BUCKET='...' PFF_DISTRIBUTION_ID='...' bash scripts/audit-edge-security.sh
 ```
 
 It checks:
@@ -120,11 +120,12 @@ Pull requests and `main` run:
 1. `npm ci`
 2. `npm audit --audit-level=high`
 3. ESLint
-4. Farm OS contract checks
-5. static security contract checks
-6. production static build
-7. responsive/security Playwright tests
-8. CodeQL `security-extended` analysis
+4. shell automation syntax validation
+5. Farm OS contract checks
+6. static security contract checks
+7. production static build
+8. responsive/security Playwright tests
+9. CodeQL `security-extended` analysis
 
 Do not deploy when any required gate is red.
 
