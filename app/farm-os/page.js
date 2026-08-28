@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import FarmOsDashboard from "@/components/FarmOsDashboard";
@@ -22,6 +23,12 @@ export default function FarmOsPage() {
       <main>
         <div className="wrap">
           <FarmOsDashboard />
+          <section className="farm-panel" aria-labelledby="farm-os-weekly-review-heading">
+            <span className="eyebrow">Review rhythm</span>
+            <h2 id="farm-os-weekly-review-heading">Close the week before planning the next one.</h2>
+            <p>Summarize the last seven local calendar days of recorded harvests, sales, expenses, notes, and dated task progress, then see overdue work and the next seven days.</p>
+            <div className="farm-actions"><Link className="farm-action" href="/farm-weekly-review">Open Weekly Review</Link></div>
+          </section>
         </div>
       </main>
       <Footer />
