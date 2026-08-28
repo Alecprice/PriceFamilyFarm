@@ -92,7 +92,7 @@ export default function FarmOsDashboard() {
         <strong>Private browser dashboard.</strong> This page reads the same browser-local Farm Records and funding tracker already stored on this device. It does not upload, sync, or publish them.
       </div>
 
-      <div className="farm-summary-grid" aria-label="Farm OS summary">
+      <div className="farm-summary-grid" role="group" aria-label="Farm OS summary">
         <div className="farm-summary-card"><span>Harvest records</span><b>{ready ? summary.harvests : "—"}</b></div>
         <div className="farm-summary-card"><span>Recorded cash margin</span><b>{ready ? money(summary.cashMargin) : "—"}</b></div>
         <div className="farm-summary-card"><span>Running experiments</span><b>{ready ? summary.runningExperiments : "—"}</b></div>
