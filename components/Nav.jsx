@@ -24,6 +24,7 @@ const NAV_ITEMS = [
     label: "Plan",
     children: [
       { href: "/farm-planner", label: "Farm Planner" },
+      { href: "/plantings", label: "Plantings & Successions" },
       { href: "/farm-calendar", label: "Farm Calendar" },
       { href: "/learn/garden-layout-builder", label: "Garden Layout Builder" },
       { href: "/farm-map", label: "Schematic Farm Map" },
