@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { localDay } from "@/lib/localDate";
 
 const STORAGE_KEY = "price-family-farm-records-v2";
 const MAX_BACKUP_BYTES = 2_000_000;
@@ -36,9 +37,6 @@ function money(value) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
 }
 
-// Spreadsheet programs can execute formulas from CSV cells beginning with
-// =, +, -, or @. Prefixing user-controlled values with an apostrophe keeps
-// the exported sheet inert without changing the visible value in Excel.
 function csvEscape(value) {
   let cell = String(value ?? "");
   if (/^[\s]*[=+\-@]/.test(cell)) cell = `'${cell}`;
@@ -56,10 +54,6 @@ function download(filename, content, type) {
   anchor.click();
   anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 0);
-}
-
-function today() {
-  return new Date().toISOString().slice(0, 10);
 }
 
 function sanitizeHarvest(item, index) {
@@ -172,7 +166,7 @@ export default function FarmRecordWorkspace() {
     entry.id = id("harvest");
     setRecords((current) => ({ ...current, harvests: [entry, ...current.harvests].slice(0, MAX_RECORDS_PER_SECTION) }));
     event.currentTarget.reset();
-    event.currentTarget.elements.date.value = today();
+    event.currentTarget.elements.date.value = localDay();
   }
 
   function addExperiment(event) {
@@ -185,7 +179,7 @@ export default function FarmRecordWorkspace() {
     entry.id = id("experiment");
     setRecords((current) => ({ ...current, experiments: [entry, ...current.experiments].slice(0, MAX_RECORDS_PER_SECTION) }));
     event.currentTarget.reset();
-    event.currentTarget.elements.date.value = today();
+    event.currentTarget.elements.date.value = localDay();
   }
 
   function addExpense(event) {
@@ -198,7 +192,7 @@ export default function FarmRecordWorkspace() {
     entry.id = id("expense");
     setRecords((current) => ({ ...current, expenses: [entry, ...current.expenses].slice(0, MAX_RECORDS_PER_SECTION) }));
     event.currentTarget.reset();
-    event.currentTarget.elements.date.value = today();
+    event.currentTarget.elements.date.value = localDay();
   }
 
   function remove(section, recordId) {
@@ -206,7 +200,7 @@ export default function FarmRecordWorkspace() {
   }
 
   function exportJson() {
-    download(`price-family-farm-records-${today()}.json`, JSON.stringify(records, null, 2), "application/json");
+    download(`price-family-farm-records-${localDay()}.json`, JSON.stringify(records, null, 2), "application/json");
   }
 
   function exportCsv() {
@@ -214,7 +208,7 @@ export default function FarmRecordWorkspace() {
     records.harvests.forEach((item) => rows.push(["harvest", item.date, item.crop, item.variety || item.destination, item.quantity, item.unit, item.saleAmount, "", item.destination, item.notes]));
     records.experiments.forEach((item) => rows.push(["experiment", item.date, item.crop, item.title, "", "", "", "", item.status, [item.question, item.result].filter(Boolean).join(" — ")]));
     records.expenses.forEach((item) => rows.push(["expense", item.date, item.crop, item.description, "", "", "", item.amount, item.category, item.notes]));
-    download(`price-family-farm-records-${today()}.csv`, rows.map((row) => row.map(csvEscape).join(",")).join("\n"), "text/csv;charset=utf-8");
+    download(`price-family-farm-records-${localDay()}.csv`, rows.map((row) => row.map(csvEscape).join(",")).join("\n"), "text/csv;charset=utf-8");
   }
 
   function importJson(event) {
@@ -276,7 +270,7 @@ function HarvestPanel({ records, onAdd, onRemove }) {
       <p>Capture enough detail to compare crops, varieties, growing areas, and revenue later without making data entry a chore.</p>
       <form onSubmit={onAdd}>
         <div className="farm-form-grid">
-          <Field id="harvest-date" label="Date"><input id="harvest-date" name="date" type="date" defaultValue={today()} required /></Field>
+          <Field id="harvest-date" label="Date"><input id="harvest-date" name="date" type="date" defaultValue={localDay()} required /></Field>
           <Field id="harvest-crop" label="Crop"><input id="harvest-crop" name="crop" type="text" placeholder="Tomato" maxLength={80} required /></Field>
           <Field id="harvest-variety" label="Variety"><input id="harvest-variety" name="variety" type="text" placeholder="Cherokee Purple" maxLength={100} /></Field>
           <Field id="harvest-location" label="Growing area"><input id="harvest-location" name="location" type="text" placeholder="High tunnel, Bed 2, Greenhouse" maxLength={100} /></Field>
@@ -300,7 +294,7 @@ function ExperimentPanel({ records, onAdd, onRemove }) {
       <p>Record the question, what changed, what stayed constant, and the result. An unfinished trial stays visibly unfinished.</p>
       <form onSubmit={onAdd}>
         <div className="farm-form-grid">
-          <Field id="experiment-date" label="Start / observation date"><input id="experiment-date" name="date" type="date" defaultValue={today()} required /></Field>
+          <Field id="experiment-date" label="Start / observation date"><input id="experiment-date" name="date" type="date" defaultValue={localDay()} required /></Field>
           <Field id="experiment-status" label="Status"><select id="experiment-status" name="status" defaultValue="planned"><option value="planned">Planned</option><option value="running">Running</option><option value="complete">Complete</option><option value="stopped">Stopped</option></select></Field>
           <Field id="experiment-title" label="Experiment title"><input id="experiment-title" name="title" type="text" placeholder="Potting mix comparison" maxLength={120} required /></Field>
           <Field id="experiment-crop" label="Crop"><input id="experiment-crop" name="crop" type="text" placeholder="Pepper starts" maxLength={80} /></Field>
@@ -325,7 +319,7 @@ function ExpensePanel({ records, onAdd, onRemove, total }) {
       <p><strong>Total recorded expenses: {money(total)}</strong></p>
       <form onSubmit={onAdd}>
         <div className="farm-form-grid">
-          <Field id="expense-date" label="Date"><input id="expense-date" name="date" type="date" defaultValue={today()} required /></Field>
+          <Field id="expense-date" label="Date"><input id="expense-date" name="date" type="date" defaultValue={localDay()} required /></Field>
           <Field id="expense-category" label="Category"><select id="expense-category" name="category" defaultValue="seed-plant"><option value="seed-plant">Seed / plants</option><option value="soil-compost">Soil / compost</option><option value="fertility">Fertility</option><option value="irrigation">Irrigation</option><option value="packaging">Packaging</option><option value="equipment">Equipment</option><option value="market-fee">Market fee</option><option value="other">Other</option></select></Field>
           <Field id="expense-description" label="Description"><input id="expense-description" name="description" type="text" maxLength={160} placeholder="Seed order" required /></Field>
           <Field id="expense-crop" label="Crop, if attributable"><input id="expense-crop" name="crop" type="text" maxLength={80} placeholder="Tomatoes" /></Field>
