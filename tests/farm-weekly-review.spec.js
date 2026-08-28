@@ -37,10 +37,11 @@ test("weekly review summarizes browser-local farm activity and exports without n
   page.on("request", (request) => requests.push(request.url()));
   await page.goto("/farm-weekly-review/");
 
-  await expect(page.getByText("Harvest entries", { exact: true }).locator("..").getByText("1", { exact: true })).toBeVisible();
-  await expect(page.getByText("$30.00", { exact: true })).toBeVisible();
-  await expect(page.getByText("$12.00", { exact: true })).toBeVisible();
-  await expect(page.getByText("$18.00", { exact: true })).toBeVisible();
+  const summary = page.getByLabel("Weekly farm review summary");
+  await expect(summary.getByText("Harvest entries", { exact: true }).locator("..").getByText("1", { exact: true })).toBeVisible();
+  await expect(summary.getByText("$30.00", { exact: true })).toBeVisible();
+  await expect(summary.getByText("$12.00", { exact: true })).toBeVisible();
+  await expect(summary.getByText("$18.00", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "1 dated task marked done", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "1 overdue open", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "1 due through next 7 days", exact: true })).toBeVisible();
