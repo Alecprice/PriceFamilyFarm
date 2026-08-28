@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   {
     label: "Farm",
     children: [
+      { href: "/farm-os", label: "Farm OS" },
       { href: "/what-we-grow", label: "What We Grow" },
       { href: "/farm-records", label: "Farm Records" },
       { href: "/farm-analytics", label: "Farm Analytics" },
