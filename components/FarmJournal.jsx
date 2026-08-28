@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { localDay } from "@/lib/localDate";
 
 const STORAGE_KEY = "price-family-farm-journal-v1";
 const MAX_ENTRIES = 1_000;
@@ -36,17 +37,13 @@ function sanitizeEntries(value) {
   return value.slice(0, MAX_ENTRIES).map(sanitizeEntry).filter(Boolean);
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function downloadJson(entries) {
   const payload = JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), entries }, null, 2);
   const blob = new Blob([payload], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `price-family-farm-journal-${today()}.json`;
+  anchor.download = `price-family-farm-journal-${localDay()}.json`;
   anchor.rel = "noopener";
   document.body.appendChild(anchor);
   anchor.click();
@@ -100,7 +97,7 @@ export default function FarmJournal() {
     if (!entry) return;
     setEntries((current) => [entry, ...current].slice(0, MAX_ENTRIES));
     event.currentTarget.reset();
-    event.currentTarget.elements.date.value = today();
+    event.currentTarget.elements.date.value = localDay();
     setNotice("Journal entry saved in this browser.");
   }
 
@@ -119,7 +116,7 @@ export default function FarmJournal() {
         <h2 id="journal-entry-heading">Add a farm note.</h2>
         <form onSubmit={addEntry}>
           <div className="farm-form-grid">
-            <div className="farm-field"><label htmlFor="journal-date">Date</label><input id="journal-date" name="date" type="date" defaultValue={today()} required /></div>
+            <div className="farm-field"><label htmlFor="journal-date">Date</label><input id="journal-date" name="date" type="date" defaultValue={localDay()} required /></div>
             <div className="farm-field"><label htmlFor="journal-category">Category</label><select id="journal-category" name="category" defaultValue="Field note">{[...CATEGORIES].map((category) => <option key={category}>{category}</option>)}</select></div>
             <div className="farm-field wide"><label htmlFor="journal-title">Title</label><input id="journal-title" name="title" maxLength={120} required placeholder="What happened?" /></div>
             <div className="farm-field wide"><label htmlFor="journal-body">Observation / note</label><textarea id="journal-body" name="body" maxLength={2000} required placeholder="Record the observation, decision, problem, customer feedback, maintenance work, or next action." /></div>
