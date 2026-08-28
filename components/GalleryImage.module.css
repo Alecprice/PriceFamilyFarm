@@ -1,0 +1,13 @@
+.trigger {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  color: inherit;
+}
+
+.trigger:focus-visible {
+  outline: 3px solid var(--mustard);
+  outline-offset: 3px;
+}

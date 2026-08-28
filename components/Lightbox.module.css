@@ -1,0 +1,12 @@
+.media {
+  position: relative;
+  width: min(92vw, 1200px);
+  height: min(88vh, 900px);
+}
+
+@media (max-width: 620px) {
+  .media {
+    width: 94vw;
+    height: 82vh;
+  }
+}

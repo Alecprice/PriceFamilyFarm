@@ -2,11 +2,17 @@
 
 import Image from "next/image";
 import { useLightbox } from "./Lightbox";
+import styles from "./GalleryImage.module.css";
 
 export default function GalleryImage({ src, alt }) {
   const open = useLightbox();
   return (
-    <figure onClick={() => open(src, alt)} className="gal-figure">
+    <button
+      type="button"
+      onClick={() => open(src, alt)}
+      className={`gal-figure ${styles.trigger}`}
+      aria-label={`Open larger photo: ${alt}`}
+    >
       <Image
         src={src}
         alt={alt}
@@ -14,6 +20,6 @@ export default function GalleryImage({ src, alt }) {
         sizes="(max-width: 620px) 50vw, (max-width: 900px) 33vw, 25vw"
         style={{ objectFit: "cover" }}
       />
-    </figure>
+    </button>
   );
 }
