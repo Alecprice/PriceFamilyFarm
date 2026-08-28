@@ -14,6 +14,7 @@ export default function robots() {
         "/farm-records",
         "/farm-analytics",
         "/farm-inventory",
+        "/plantings",
         "/farm-planner",
         "/farm-calendar",
         "/farm-journal",
