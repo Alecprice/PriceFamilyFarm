@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { localDay, localDayPlus } from "@/lib/localDate";
 
 const STORAGE_KEY = "price-family-farm-calendar-v1";
 const MAX_ITEMS = 1_000;
@@ -37,10 +38,6 @@ function sanitizeItems(value) {
   return value.slice(0, MAX_ITEMS).map(sanitizeItem).filter(Boolean);
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export default function FarmCalendar() {
   const [items, setItems] = useState([]);
   const [ready, setReady] = useState(false);
@@ -70,12 +67,10 @@ export default function FarmCalendar() {
   }, [items, ready]);
 
   const summary = useMemo(() => {
-    const current = today();
+    const current = localDay();
     const open = items.filter((item) => !["Done", "Skipped"].includes(item.status));
     const overdue = open.filter((item) => item.date < current).length;
-    const next7 = new Date();
-    next7.setDate(next7.getDate() + 7);
-    const next7Date = next7.toISOString().slice(0, 10);
+    const next7Date = localDayPlus(7);
     const dueSoon = open.filter((item) => item.date >= current && item.date <= next7Date).length;
     return { total: items.length, open: open.length, overdue, dueSoon };
   }, [items]);
@@ -99,7 +94,7 @@ export default function FarmCalendar() {
     if (!item) return;
     setItems((current) => [...current, item].slice(0, MAX_ITEMS));
     event.currentTarget.reset();
-    event.currentTarget.elements.date.value = today();
+    event.currentTarget.elements.date.value = localDay();
     setNotice("Farm task saved in this browser.");
   }
 
@@ -130,7 +125,7 @@ export default function FarmCalendar() {
         <h2 id="farm-calendar-add-heading">Add a farm task.</h2>
         <form onSubmit={addItem}>
           <div className="farm-form-grid">
-            <div className="farm-field"><label htmlFor="calendar-date">Date</label><input id="calendar-date" name="date" type="date" defaultValue={today()} required /></div>
+            <div className="farm-field"><label htmlFor="calendar-date">Date</label><input id="calendar-date" name="date" type="date" defaultValue={localDay()} required /></div>
             <div className="farm-field"><label htmlFor="calendar-category">Category</label><select id="calendar-category" name="category" defaultValue="Planting">{[...CATEGORIES].map((category) => <option key={category}>{category}</option>)}</select></div>
             <div className="farm-field wide"><label htmlFor="calendar-task">Task</label><input id="calendar-task" name="task" maxLength={180} required placeholder="Transplant fall lettuce" /></div>
             <div className="farm-field wide"><label htmlFor="calendar-notes">Notes</label><textarea id="calendar-notes" name="notes" maxLength={600} placeholder="Source, prerequisites, materials, timing notes, or follow-up." /></div>
