@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { localDay } from "@/lib/localDate";
 
 const STORES = {
   records: { key: "price-family-farm-records-v2", max: 2_000_000 },
@@ -106,10 +107,6 @@ function money(value) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function countLabel(count, singular, plural = `${singular}s`) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
@@ -130,7 +127,7 @@ export default function FarmOsDashboard() {
     const activeFunding = data.funding.filter((item) => !["Done", "Not pursuing"].includes(item?.status)).length;
     const activePlans = data.plans.filter((item) => !["Complete", "Paused"].includes(item?.status)).length;
     const openTasks = data.calendar.filter((item) => !["Done", "Skipped"].includes(item?.status)).length;
-    const overdueTasks = data.calendar.filter((item) => item?.date && item.date < today() && !["Done", "Skipped"].includes(item?.status)).length;
+    const overdueTasks = data.calendar.filter((item) => item?.date && item.date < localDay() && !["Done", "Skipped"].includes(item?.status)).length;
     const gardenArea = data.beds.reduce((sum, item) => sum + safeNumber(item?.length) * safeNumber(item?.width), 0);
     const zonesNeedingWork = data.zones.filter((item) => item?.status === "Needs work").length;
     return {
