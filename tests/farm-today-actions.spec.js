@@ -22,8 +22,8 @@ test("Farm Today can complete, reschedule, and advance browser-local work", asyn
 
   await page.goto("/farm-today/");
   const actions = page.getByRole("region", { name: "Clear work and advance crop plans in place." });
-  await actions.getByRole("button", { name: "Do tomorrow", exact: true }).first().click();
-  await actions.getByRole("button", { name: "Done", exact: true }).click();
+  await actions.getByLabel("Actions for Check drip line").getByRole("button", { name: "Do tomorrow", exact: true }).click();
+  await actions.getByLabel("Actions for Weed bed").getByRole("button", { name: "Done", exact: true }).click();
   await actions.getByRole("button", { name: "Advance Tomato to Transplanted", exact: true }).click();
 
   const state = await page.evaluate(() => ({
