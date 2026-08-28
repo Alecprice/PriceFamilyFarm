@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("Farm Today prioritizes local work and quick-captures tasks and notes without network sync", async ({ page }) => {
+test("Farm Today prioritizes work and quick-captures tasks, notes, harvests, and expenses without network sync", async ({ page }) => {
   await page.addInitScript(() => {
     function localDay(offset = 0) {
       const value = new Date();
@@ -26,7 +26,7 @@ test("Farm Today prioritizes local work and quick-captures tasks and notes witho
       { id: "journal-1", date: localDay(), title: "Dry afternoon", category: "Field note", body: "Top inch dried quickly." },
     ]));
     localStorage.setItem("price-family-farm-records-v2", JSON.stringify({
-      harvests: [{ id: "harvest-1", date: localDay(), crop: "Tomato", variety: "Cherokee Purple", quantity: "4", unit: "lb", destination: "home", saleAmount: "0", notes: "" }],
+      harvests: [{ id: "harvest-1", date: localDay(), crop: "Tomato", variety: "Cherokee Purple", location: "", quantity: "4", unit: "lb", destination: "home", saleAmount: "0", notes: "" }],
       experiments: [],
       expenses: [{ id: "expense-1", date: localDay(), category: "seed-plant", description: "Fall lettuce seed", crop: "Lettuce", amount: "12.50", notes: "" }],
     }));
@@ -68,6 +68,33 @@ test("Farm Today prioritizes local work and quick-captures tasks and notes witho
   const journal = await page.evaluate(() => JSON.parse(localStorage.getItem("price-family-farm-journal-v1")));
   expect(journal).toHaveLength(2);
   expect(journal[0].title).toBe("Wind picked up");
+
+  await page.getByLabel("Harvest crop", { exact: true }).fill("Bean");
+  await page.getByLabel("Variety", { exact: true }).fill("Provider");
+  await page.getByLabel("Quantity", { exact: true }).fill("3.5");
+  await page.getByLabel("Destination", { exact: true }).selectOption("sold");
+  await page.getByLabel("Sale amount, if sold", { exact: true }).fill("18");
+  await page.getByRole("button", { name: "Save harvest", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Harvest saved to private Farm Records");
+  await expect(page.getByRole("heading", { name: "Bean · Provider", exact: true })).toBeVisible();
+
+  let records = await page.evaluate(() => JSON.parse(localStorage.getItem("price-family-farm-records-v2")));
+  expect(records.harvests).toHaveLength(2);
+  expect(records.harvests[0].crop).toBe("Bean");
+  expect(records.harvests[0].saleAmount).toBe("18");
+
+  await page.getByLabel("Expense category", { exact: true }).selectOption("equipment");
+  await page.getByLabel("Expense description", { exact: true }).fill("Row cover clips");
+  await page.getByLabel("Expense crop (optional)", { exact: true }).fill("Lettuce");
+  await page.getByLabel("Expense amount", { exact: true }).fill("9.75");
+  await page.getByRole("button", { name: "Save expense", exact: true }).click();
+  await expect(page.getByRole("status")).toContainText("Expense saved to private Farm Records");
+  await expect(page.getByRole("heading", { name: "Row cover clips", exact: true })).toBeVisible();
+
+  records = await page.evaluate(() => JSON.parse(localStorage.getItem("price-family-farm-records-v2")));
+  expect(records.expenses).toHaveLength(2);
+  expect(records.expenses[0].description).toBe("Row cover clips");
+  expect(records.expenses[0].amount).toBe("9.75");
 
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/i);
   await expect(page.getByRole("link", { name: "Back up Farm OS", exact: true })).toBeVisible();

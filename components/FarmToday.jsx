@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { localDay, localDayPlus } from "@/lib/localDate";
 
 const STORES = {
-  records: { key: "price-family-farm-records-v2", maxBytes: 2_000_000 },
+  records: { key: "price-family-farm-records-v2", maxBytes: 2_000_000, maxItems: 5_000 },
   planner: { key: "price-family-farm-planner-v1", maxBytes: 1_000_000, maxItems: 500 },
   calendar: { key: "price-family-farm-calendar-v1", maxBytes: 1_000_000, maxItems: 1_000 },
   journal: { key: "price-family-farm-journal-v1", maxBytes: 1_000_000, maxItems: 1_000 },
@@ -14,6 +15,9 @@ const TASK_CATEGORIES = new Set(["Planting", "Harvest", "Maintenance", "Market",
 const TASK_STATUSES = new Set(["Planned", "In progress", "Done", "Skipped"]);
 const PLAN_STATUSES = new Set(["Planned", "Started", "Transplanted", "Harvesting", "Complete", "Paused"]);
 const JOURNAL_CATEGORIES = new Set(["Field note", "Weather observation", "Market", "Maintenance", "Planning", "Other"]);
+const HARVEST_UNITS = new Set(["lb", "oz", "count", "bunch", "pint", "quart", "tray"]);
+const HARVEST_DESTINATIONS = new Set(["home", "sold", "donated", "saved-seed", "other"]);
+const EXPENSE_CATEGORIES = new Set(["seed-plant", "soil-compost", "fertility", "irrigation", "packaging", "equipment", "market-fee", "other"]);
 
 function safeText(value, max) {
   return String(value ?? "").trim().slice(0, max);
@@ -24,18 +28,11 @@ function safeDate(value) {
   return /^\d{4}-\d{2}-\d{2}$/.test(next) ? next : "";
 }
 
-function localDay(value = new Date()) {
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function dayPlus(days) {
-  const value = new Date();
-  value.setHours(12, 0, 0, 0);
-  value.setDate(value.getDate() + days);
-  return localDay(value);
+function safeNumberString(value, max = 1_000_000_000) {
+  if (value === "" || value == null) return "";
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount < 0 || amount > max) return "";
+  return String(amount);
 }
 
 function readJson(store) {
@@ -66,6 +63,30 @@ function writeArray(store, items) {
   const payload = JSON.stringify(items.slice(0, store.maxItems));
   if (payload.length > store.maxBytes) throw new Error("store-too-large");
   localStorage.setItem(store.key, payload);
+}
+
+function strictRecords() {
+  const raw = localStorage.getItem(STORES.records.key);
+  if (!raw) return { harvests: [], experiments: [], expenses: [] };
+  if (raw.length > STORES.records.maxBytes) throw new Error("records-too-large");
+  const parsed = JSON.parse(raw);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid-records");
+  if (!Array.isArray(parsed.harvests) || !Array.isArray(parsed.experiments) || !Array.isArray(parsed.expenses)) throw new Error("invalid-records");
+  return {
+    harvests: parsed.harvests.slice(0, STORES.records.maxItems),
+    experiments: parsed.experiments.slice(0, STORES.records.maxItems),
+    expenses: parsed.expenses.slice(0, STORES.records.maxItems),
+  };
+}
+
+function writeRecords(records) {
+  const payload = JSON.stringify({
+    harvests: records.harvests.slice(0, STORES.records.maxItems),
+    experiments: records.experiments.slice(0, STORES.records.maxItems),
+    expenses: records.expenses.slice(0, STORES.records.maxItems),
+  });
+  if (payload.length > STORES.records.maxBytes) throw new Error("records-too-large");
+  localStorage.setItem(STORES.records.key, payload);
 }
 
 function safeMoney(value) {
@@ -117,6 +138,43 @@ function sanitizeJournal(item, index) {
     title,
     category: JOURNAL_CATEGORIES.has(item?.category) ? item.category : "Other",
     body,
+  };
+}
+
+function sanitizeQuickHarvest(item) {
+  const date = safeDate(item?.date);
+  const crop = safeText(item?.crop, 80);
+  const quantity = safeNumberString(item?.quantity, 10_000_000);
+  const unit = HARVEST_UNITS.has(item?.unit) ? item.unit : "lb";
+  const destination = HARVEST_DESTINATIONS.has(item?.destination) ? item.destination : "home";
+  if (!date || !crop || !quantity || Number(quantity) <= 0) return null;
+  return {
+    id: `harvest-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    date,
+    crop,
+    variety: safeText(item?.variety, 100),
+    location: "",
+    quantity,
+    unit,
+    destination,
+    saleAmount: safeNumberString(item?.saleAmount),
+    notes: "",
+  };
+}
+
+function sanitizeQuickExpense(item) {
+  const date = safeDate(item?.date);
+  const description = safeText(item?.description, 160);
+  const amount = safeNumberString(item?.amount);
+  if (!date || !description || !amount || Number(amount) <= 0) return null;
+  return {
+    id: `expense-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    date,
+    category: EXPENSE_CATEGORIES.has(item?.category) ? item.category : "other",
+    description,
+    crop: safeText(item?.crop, 80),
+    amount,
+    notes: "",
   };
 }
 
@@ -172,7 +230,7 @@ export default function FarmToday() {
 
   const summary = useMemo(() => {
     const today = localDay();
-    const week = dayPlus(7);
+    const week = localDayPlus(7);
     const open = data.calendar.filter((item) => !["Done", "Skipped"].includes(item.status));
     const dueToday = open.filter((item) => item.date === today);
     const overdue = open.filter((item) => item.date < today);
@@ -252,6 +310,67 @@ export default function FarmToday() {
     }
   }
 
+  function addHarvest(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const entry = sanitizeQuickHarvest({
+      date: formData.get("date"),
+      crop: formData.get("crop"),
+      variety: formData.get("variety"),
+      quantity: formData.get("quantity"),
+      unit: formData.get("unit"),
+      destination: formData.get("destination"),
+      saleAmount: formData.get("saleAmount"),
+    });
+    if (!entry) {
+      setStatus("Add a valid harvest date, crop, and quantity before saving.");
+      return;
+    }
+
+    try {
+      const current = strictRecords();
+      writeRecords({ ...current, harvests: [entry, ...current.harvests] });
+      form.reset();
+      form.elements.date.value = localDay();
+      form.elements.unit.value = "lb";
+      form.elements.destination.value = "home";
+      refresh();
+      setStatus("Harvest saved to private Farm Records in this browser.");
+    } catch {
+      setStatus("Farm Records could not be updated safely. Open the full records tool or make a backup before trying again.");
+    }
+  }
+
+  function addExpense(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const entry = sanitizeQuickExpense({
+      date: formData.get("date"),
+      category: formData.get("category"),
+      description: formData.get("description"),
+      crop: formData.get("crop"),
+      amount: formData.get("amount"),
+    });
+    if (!entry) {
+      setStatus("Add a valid expense date, description, and amount before saving.");
+      return;
+    }
+
+    try {
+      const current = strictRecords();
+      writeRecords({ ...current, expenses: [entry, ...current.expenses] });
+      form.reset();
+      form.elements.date.value = localDay();
+      form.elements.category.value = "seed-plant";
+      refresh();
+      setStatus("Expense saved to private Farm Records in this browser.");
+    } catch {
+      setStatus("Farm Records could not be updated safely. Open the full records tool or make a backup before trying again.");
+    }
+  }
+
   return (
     <div className="farm-tools-shell">
       <div className="farm-tools-note">
@@ -312,6 +431,32 @@ export default function FarmToday() {
               <div className="farm-field wide"><label htmlFor="today-note-body">Observation / note</label><textarea id="today-note-body" name="body" maxLength={2000} required placeholder="Capture the observation, decision, result, issue, or next action." /></div>
             </div>
             <div className="farm-actions"><button className="farm-action" type="submit">Save note</button></div>
+          </form>
+
+          <form className="packet" onSubmit={addHarvest}>
+            <h3>Log a harvest</h3>
+            <div className="farm-form-grid">
+              <div className="farm-field"><label htmlFor="today-harvest-date">Harvest date</label><input id="today-harvest-date" name="date" type="date" defaultValue={localDay()} required /></div>
+              <div className="farm-field"><label htmlFor="today-harvest-crop">Harvest crop</label><input id="today-harvest-crop" name="crop" maxLength={80} required placeholder="Tomato" /></div>
+              <div className="farm-field"><label htmlFor="today-harvest-variety">Variety</label><input id="today-harvest-variety" name="variety" maxLength={100} placeholder="Cherokee Purple" /></div>
+              <div className="farm-field"><label htmlFor="today-harvest-quantity">Quantity</label><input id="today-harvest-quantity" name="quantity" type="number" min="0.01" max="10000000" step="0.01" inputMode="decimal" required /></div>
+              <div className="farm-field"><label htmlFor="today-harvest-unit">Unit</label><select id="today-harvest-unit" name="unit" defaultValue="lb">{[...HARVEST_UNITS].map((unit) => <option key={unit}>{unit}</option>)}</select></div>
+              <div className="farm-field"><label htmlFor="today-harvest-destination">Destination</label><select id="today-harvest-destination" name="destination" defaultValue="home"><option value="home">Home use</option><option value="sold">Sold</option><option value="donated">Donated</option><option value="saved-seed">Saved seed</option><option value="other">Other</option></select></div>
+              <div className="farm-field wide"><label htmlFor="today-harvest-sale">Sale amount, if sold</label><input id="today-harvest-sale" name="saleAmount" type="number" min="0" max="1000000000" step="0.01" inputMode="decimal" placeholder="0.00" /></div>
+            </div>
+            <div className="farm-actions"><button className="farm-action" type="submit">Save harvest</button></div>
+          </form>
+
+          <form className="packet" onSubmit={addExpense}>
+            <h3>Log an expense</h3>
+            <div className="farm-form-grid">
+              <div className="farm-field"><label htmlFor="today-expense-date">Expense date</label><input id="today-expense-date" name="date" type="date" defaultValue={localDay()} required /></div>
+              <div className="farm-field"><label htmlFor="today-expense-category">Expense category</label><select id="today-expense-category" name="category" defaultValue="seed-plant"><option value="seed-plant">Seed / plants</option><option value="soil-compost">Soil / compost</option><option value="fertility">Fertility</option><option value="irrigation">Irrigation</option><option value="packaging">Packaging</option><option value="equipment">Equipment</option><option value="market-fee">Market fee</option><option value="other">Other</option></select></div>
+              <div className="farm-field wide"><label htmlFor="today-expense-description">Expense description</label><input id="today-expense-description" name="description" maxLength={160} required placeholder="Fall lettuce seed" /></div>
+              <div className="farm-field"><label htmlFor="today-expense-crop">Expense crop (optional)</label><input id="today-expense-crop" name="crop" maxLength={80} placeholder="Lettuce" /></div>
+              <div className="farm-field"><label htmlFor="today-expense-amount">Expense amount</label><input id="today-expense-amount" name="amount" type="number" min="0.01" max="1000000000" step="0.01" inputMode="decimal" required /></div>
+            </div>
+            <div className="farm-actions"><button className="farm-action" type="submit">Save expense</button></div>
           </form>
         </div>
       </section>
