@@ -44,6 +44,7 @@ export default function Nav() {
   const [open, setOpen] = useState(false);
   const [openMenu, setOpenMenu] = useState("");
   const navRef = useRef(null);
+  const toggleRef = useRef(null);
 
   const isChildActive = (children) => children.some((child) => child.href === pathname);
 
@@ -53,8 +54,10 @@ export default function Nav() {
     }
     function onKey(event) {
       if (event.key === "Escape") {
+        const shouldReturnFocus = navRef.current?.contains(document.activeElement);
         setOpenMenu("");
         setOpen(false);
+        if (shouldReturnFocus) window.requestAnimationFrame(() => toggleRef.current?.focus());
       }
     }
     document.addEventListener("pointerdown", onDocumentPointer);
@@ -64,6 +67,27 @@ export default function Nav() {
       document.removeEventListener("keydown", onKey);
     };
   }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 780px)");
+    function onViewportChange(event) {
+      if (!event.matches) {
+        setOpen(false);
+        setOpenMenu("");
+      }
+    }
+    media.addEventListener("change", onViewportChange);
+    return () => media.removeEventListener("change", onViewportChange);
+  }, []);
+
+  useEffect(() => {
+    if (!open || !window.matchMedia("(max-width: 780px)").matches) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
 
   useEffect(() => {
     setOpenMenu("");
@@ -82,7 +106,17 @@ export default function Nav() {
           </svg>
           <span className="brand-text">Price Family Farm<small>Greeneville · East Tennessee</small></span>
         </Link>
-        <button className="nav-toggle" type="button" aria-expanded={open} aria-controls="primary-nav-links" onClick={() => setOpen((value) => !value)}>{open ? "Close" : "Menu"}</button>
+        <button
+          ref={toggleRef}
+          className="nav-toggle"
+          type="button"
+          aria-expanded={open}
+          aria-controls="primary-nav-links"
+          aria-label={open ? "Close primary menu" : "Open primary menu"}
+          onClick={() => setOpen((value) => !value)}
+        >
+          {open ? "Close" : "Menu"}
+        </button>
         <ul id="primary-nav-links" className={`nav-links${open ? " open" : ""}`}>
           {NAV_ITEMS.map((item) => item.children ? (
             <li key={item.label} className="nav-dropdown">
