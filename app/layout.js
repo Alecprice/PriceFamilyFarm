@@ -1,6 +1,7 @@
 import { Fraunces, Public_Sans, Space_Mono } from "next/font/google";
 import "./globals.css";
 import "./farm-os.css";
+import "./accessibility.css";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
