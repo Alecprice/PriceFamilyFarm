@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { localDay, localDayPlus } from "@/lib/localDate";
 
 const STORAGE_KEY = "price-family-farm-planner-v1";
 const MAX_PLANS = 500;
@@ -40,13 +41,9 @@ function sanitizePlans(value) {
   return value.slice(0, MAX_PLANS).map(sanitizePlan).filter(Boolean);
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function nextActionDate(plan) {
   const dates = [plan.sowDate, plan.transplantDate, plan.targetHarvestDate].filter(Boolean).sort();
-  const current = today();
+  const current = localDay();
   return dates.find((value) => value >= current) || dates.at(-1) || "";
 }
 
@@ -80,10 +77,8 @@ export default function FarmPlanner() {
 
   const summary = useMemo(() => {
     const active = plans.filter((plan) => !["Complete", "Paused"].includes(plan.status));
-    const current = today();
-    const horizon = new Date();
-    horizon.setDate(horizon.getDate() + 14);
-    const horizonDate = horizon.toISOString().slice(0, 10);
+    const current = localDay();
+    const horizonDate = localDayPlus(14);
     const next14 = active.filter((plan) => {
       const actionDate = nextActionDate(plan);
       return actionDate && actionDate >= current && actionDate <= horizonDate;
