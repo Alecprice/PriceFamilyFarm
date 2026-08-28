@@ -16,6 +16,7 @@ const STORES = [
   { id: "map", key: "price-family-farm-map-v1", label: "Schematic farm map", max: 500_000, kind: "array" },
   { id: "inventory", key: "price-family-farm-inventory-v1", label: "Farm inventory", max: 500_000, kind: "array" },
   { id: "plantings", key: "price-family-farm-plantings-v1", label: "Plantings & successions", max: 1_000_000, kind: "array" },
+  { id: "market", key: "price-family-farm-market-plan-v1", label: "Market planner", max: 750_000, kind: "array" },
 ];
 
 function validStoreValue(store, value) {
@@ -179,7 +180,7 @@ export default function FarmLocalBackup() {
       <section className="farm-panel" aria-labelledby="farm-backup-export-heading">
         <span className="eyebrow">Export</span>
         <h2 id="farm-backup-export-heading">Back up the Farm OS working set.</h2>
-        <p>Create one JSON file containing valid browser-local records, inventory, plantings, planner data, calendar tasks, journal entries, garden layout, schematic map, and funding tracker data that exist on this device. The temporary weather cache is intentionally excluded.</p>
+        <p>Create one JSON file containing valid browser-local records, inventory, plantings, market plans, planner data, calendar tasks, journal entries, garden layout, schematic map, and funding tracker data that exist on this device. The temporary weather cache is intentionally excluded.</p>
         <div className="farm-actions">
           <button className="farm-action" type="button" onClick={exportAll}>Download local Farm OS backup</button>
         </div>

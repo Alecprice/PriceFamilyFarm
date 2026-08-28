@@ -34,6 +34,12 @@ const LOCAL_DATA = [
     detail: "Supply names, quantities, reorder thresholds, suppliers, costs, and notes.",
   },
   {
+    key: "price-family-farm-market-plan-v1",
+    id: "market",
+    label: "Market planner",
+    detail: "Harvest targets, planned offer quantities, packing progress, aggregate interest counts, pricing, and market notes.",
+  },
+  {
     key: "price-family-farm-calendar-v1",
     id: "calendar",
     label: "Farm calendar",

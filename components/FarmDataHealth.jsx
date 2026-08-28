@@ -20,6 +20,7 @@ const STORES = [
   { id: "map", key: "price-family-farm-map-v1", label: "Schematic farm map", max: 500_000, kind: "array" },
   { id: "inventory", key: "price-family-farm-inventory-v1", label: "Farm inventory", max: 500_000, kind: "array" },
   { id: "plantings", key: "price-family-farm-plantings-v1", label: "Plantings & successions", max: 1_000_000, kind: "array" },
+  { id: "market", key: "price-family-farm-market-plan-v1", label: "Market planner", max: 750_000, kind: "array" },
 ];
 
 function safeObject(value) {
