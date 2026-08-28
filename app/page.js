@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import WeatherPanel from "@/components/WeatherPanel";
+import DeferredWeatherPanel from "@/components/DeferredWeatherPanel";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://price-family-farm.alecjprice.com";
 
@@ -63,7 +63,7 @@ export default function Home() {
       <section className="bg-cream bg-line-top">
         <div className="wrap">
           <div className="section-head"><span className="eyebrow">Growing conditions</span><h2>Weather should fail honestly.</h2><p>Live National Weather Service data is useful for farm planning, but the site never substitutes invented numbers when the feed is unavailable.</p></div>
-          <WeatherPanel />
+          <DeferredWeatherPanel />
         </div>
       </section>
 
