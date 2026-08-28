@@ -30,6 +30,7 @@ function readJson(key, max) {
 }
 
 function money(value) {
+  if (value === "" || value == null) return "";
   const amount = Number(value);
   if (!Number.isFinite(amount) || amount < 0) return "";
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
