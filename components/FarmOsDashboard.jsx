@@ -110,6 +110,10 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function countLabel(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
 export default function FarmOsDashboard() {
   const [data, setData] = useState(EMPTY);
   const [ready, setReady] = useState(false);
@@ -162,8 +166,8 @@ export default function FarmOsDashboard() {
         <p>Jump straight into the operating task you need instead of hunting through the public site.</p>
         <div className="grid-3">
           <article className="packet"><span className="eyebrow">Capture</span><h3>Log today&rsquo;s work</h3><p>Add a harvest, direct farm expense, or experiment while the details are fresh.</p><Link className="stat-link" href="/farm-records">Open Farm Records →</Link></article>
-          <article className="packet"><span className="eyebrow">Plan</span><h3>Work the crop plan</h3><p>{ready && summary.activePlans ? `${summary.activePlans} active crop plan${summary.activePlans === 1 ? "" : "s"} are in this browser.` : "Build or update crop plans, dates, varieties, and working spaces."}</p><Link className="stat-link" href="/farm-planner">Open Farm Planner →</Link></article>
-          <article className="packet"><span className="eyebrow">Schedule</span><h3>Clear the task queue</h3><p>{ready && summary.overdueTasks ? `${summary.overdueTasks} open task${summary.overdueTasks === 1 ? " is" : "s are"} past its planned date.` : "Keep planting, harvest, maintenance, market, and funding tasks visible."}</p><Link className="stat-link" href="/farm-calendar">Open Farm Calendar →</Link></article>
+          <article className="packet"><span className="eyebrow">Plan</span><h3>Work the crop plan</h3><p>{ready && summary.activePlans ? `${countLabel(summary.activePlans, "active crop plan")} ${summary.activePlans === 1 ? "is" : "are"} in this browser.` : "Build or update crop plans, dates, varieties, and working spaces."}</p><Link className="stat-link" href="/farm-planner">Open Farm Planner →</Link></article>
+          <article className="packet"><span className="eyebrow">Schedule</span><h3>Clear the task queue</h3><p>{ready && summary.overdueTasks ? `${countLabel(summary.overdueTasks, "open task")} ${summary.overdueTasks === 1 ? "is" : "are"} past ${summary.overdueTasks === 1 ? "its" : "their"} planned date.` : "Keep planting, harvest, maintenance, market, and funding tasks visible."}</p><Link className="stat-link" href="/farm-calendar">Open Farm Calendar →</Link></article>
         </div>
       </section>
 
@@ -171,15 +175,15 @@ export default function FarmOsDashboard() {
         <h2 id="farm-os-operating-tools">Operating tools.</h2>
         <p>The recovered planning tools now report their browser-local state here so they work as one system.</p>
         <div className="farm-record-list">
-          <article className="farm-record"><div><div className="farm-record-meta">Season review</div><h3>{ready ? `${summary.journalEntries} journal entries · ${summary.runningExperiments} running experiments` : "Loading local season activity"}</h3><p>Review observations, experiments, harvests, expenses, and tasks in context.</p></div><div className="farm-actions"><Link className="farm-action secondary" href="/timeline">Timeline</Link><Link className="farm-action secondary" href="/farm-journal">Journal</Link></div></article>
-          <article className="farm-record"><div><div className="farm-record-meta">Space planning</div><h3>{ready ? `${summary.gardenBeds} garden beds · ${Math.round(summary.gardenArea)} ft² mapped` : "Loading local garden layout"}</h3><p>Use dimensions and working-zone labels without publishing an address, parcel boundary, or GPS location.</p></div><div className="farm-actions"><Link className="farm-action secondary" href="/learn/garden-layout-builder">Garden layout</Link><Link className="farm-action secondary" href="/farm-map">Farm map</Link></div></article>
-          <article className="farm-record"><div><div className="farm-record-meta">Decision support</div><h3>{ready ? `${summary.activeFunding} funding items · ${summary.zonesNeedingWork} zones need work` : "Loading local readiness state"}</h3><p>Compare recorded economics, readiness items, and physical work areas before deciding what to do next.</p></div><div className="farm-actions"><Link className="farm-action secondary" href="/farm-analytics">Analytics</Link><Link className="farm-action secondary" href="/funding">Funding</Link></div></article>
+          <article className="farm-record"><div><div className="farm-record-meta">Season review</div><h3>{ready ? `${countLabel(summary.journalEntries, "journal entry", "journal entries")} · ${countLabel(summary.runningExperiments, "running experiment")}` : "Loading local season activity"}</h3><p>Review observations, experiments, harvests, expenses, and tasks in context.</p></div><div className="farm-actions"><Link className="farm-action secondary" href="/timeline">Timeline</Link><Link className="farm-action secondary" href="/farm-journal">Journal</Link></div></article>
+          <article className="farm-record"><div><div className="farm-record-meta">Space planning</div><h3>{ready ? `${countLabel(summary.gardenBeds, "garden bed")} · ${Math.round(summary.gardenArea)} ft² mapped` : "Loading local garden layout"}</h3><p>Use dimensions and working-zone labels without publishing an address, parcel boundary, or GPS location.</p></div><div className="farm-actions"><Link className="farm-action secondary" href="/learn/garden-layout-builder">Garden layout</Link><Link className="farm-action secondary" href="/farm-map">Farm map</Link></div></article>
+          <article className="farm-record"><div><div className="farm-record-meta">Decision support</div><h3>{ready ? `${countLabel(summary.activeFunding, "funding item")} · ${countLabel(summary.zonesNeedingWork, "zone")} need${summary.zonesNeedingWork === 1 ? "s" : ""} work` : "Loading local readiness state"}</h3><p>Compare recorded economics, readiness items, and physical work areas before deciding what to do next.</p></div><div className="farm-actions"><Link className="farm-action secondary" href="/farm-analytics">Analytics</Link><Link className="farm-action secondary" href="/funding">Funding</Link></div></article>
         </div>
       </section>
 
       <section className="farm-panel" aria-labelledby="farm-os-browser-state">
         <h2 id="farm-os-browser-state">This browser&rsquo;s Farm OS state.</h2>
-        <p>{ready ? `${Object.keys(data.found).length} local Farm OS data stores detected on this device.` : "Checking this browser for local Farm OS data."}</p>
+        <p>{ready ? `${countLabel(Object.keys(data.found).length, "local Farm OS data store")} detected on this device.` : "Checking this browser for local Farm OS data."}</p>
         <div className="farm-actions">
           <Link className="farm-action secondary" href="/weather">Check growing conditions</Link>
           <Link className="farm-action secondary" href="/privacy-tools">Manage local farm data</Link>
