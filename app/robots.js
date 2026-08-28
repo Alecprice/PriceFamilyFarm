@@ -9,6 +9,7 @@ export default function robots() {
       allow: "/",
       disallow: [
         "/farm-os",
+        "/farm-today",
         "/farm-records",
         "/farm-analytics",
         "/farm-planner",
