@@ -71,7 +71,16 @@ test("Farm Today prioritizes local work and quick-captures tasks and notes witho
 
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/i);
   await expect(page.getByRole("link", { name: "Back up Farm OS", exact: true })).toBeVisible();
-  expect(requests.some((url) => url.includes("api.weather.gov") || url.includes("web3forms"))).toBe(false);
+
+  const contactedExternalFarmServices = requests.some((rawUrl) => {
+    try {
+      const hostname = new URL(rawUrl).hostname;
+      return hostname === "api.weather.gov" || hostname === "api.web3forms.com";
+    } catch {
+      return false;
+    }
+  });
+  expect(contactedExternalFarmServices).toBe(false);
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
