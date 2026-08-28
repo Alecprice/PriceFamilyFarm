@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { localDay } from "@/lib/localDate";
 
-const MAX_BACKUP_BYTES = 6_500_000;
+const MAX_BACKUP_BYTES = 9_500_000;
+const BACKUP_META_KEY = "price-family-farm-backup-meta-v1";
+const PRE_RESTORE_KEY = "price-family-farm-pre-restore-snapshot-v1";
 const STORES = [
   { id: "records", key: "price-family-farm-records-v2", label: "Farm records", max: 2_000_000, kind: "object" },
   { id: "funding", key: "price-family-farm-funding-v1", label: "Funding & education", max: 500_000, kind: "array" },
@@ -11,6 +14,8 @@ const STORES = [
   { id: "journal", key: "price-family-farm-journal-v1", label: "Farm journal", max: 1_000_000, kind: "array" },
   { id: "garden", key: "price-family-farm-garden-layout-v1", label: "Garden layout", max: 500_000, kind: "array" },
   { id: "map", key: "price-family-farm-map-v1", label: "Schematic farm map", max: 500_000, kind: "array" },
+  { id: "inventory", key: "price-family-farm-inventory-v1", label: "Farm inventory", max: 500_000, kind: "array" },
+  { id: "plantings", key: "price-family-farm-plantings-v1", label: "Plantings & successions", max: 1_000_000, kind: "array" },
 ];
 
 function validStoreValue(store, value) {
@@ -23,21 +28,36 @@ function validStoreValue(store, value) {
   }
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
+function serializeBackup(payload) {
+  const raw = JSON.stringify(payload, null, 2);
+  if (raw.length > MAX_BACKUP_BYTES) throw new Error("backup-too-large");
+  return raw;
 }
 
-function downloadBackup(payload) {
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+function downloadBackup(raw) {
+  const blob = new Blob([raw], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `price-family-farm-local-backup-${today()}.json`;
+  anchor.download = `price-family-farm-local-backup-${localDay()}.json`;
   anchor.rel = "noopener";
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function buildCurrentSnapshot(selectedIds) {
+  const stores = {};
+  for (const store of STORES) {
+    if (!selectedIds.has(store.id)) continue;
+    const raw = localStorage.getItem(store.key);
+    if (!raw || raw.length > store.max) continue;
+    const parsed = JSON.parse(raw);
+    if (!validStoreValue(store, parsed)) continue;
+    stores[store.id] = parsed;
+  }
+  return { version: 1, createdAt: new Date().toISOString(), reason: "before-restore", stores };
 }
 
 export default function FarmLocalBackup() {
@@ -62,18 +82,20 @@ export default function FarmLocalBackup() {
         stores[store.id] = parsed;
         count += 1;
       }
+
+      if (!count) {
+        setStatus("No valid Farm OS working data was found in this browser to export.");
+        return;
+      }
+
+      const exportedAt = new Date().toISOString();
+      const rawBackup = serializeBackup({ version: 1, exportedAt, stores });
+      downloadBackup(rawBackup);
+      localStorage.setItem(BACKUP_META_KEY, JSON.stringify({ lastExportedAt: exportedAt, storeCount: count }));
+      setStatus(`Prepared a local backup containing ${count} Farm OS data ${count === 1 ? "area" : "areas"}.`);
     } catch {
-      setStatus("This browser could not read one or more Farm OS stores, so no backup was created.");
-      return;
+      setStatus("This browser could not create a complete backup safely. Check Farm OS Data Health before trying again.");
     }
-
-    if (!count) {
-      setStatus("No valid Farm OS working data was found in this browser to export.");
-      return;
-    }
-
-    downloadBackup({ version: 1, exportedAt: new Date().toISOString(), stores });
-    setStatus(`Prepared a local backup containing ${count} Farm OS data ${count === 1 ? "area" : "areas"}.`);
   }
 
   async function inspectFile(event) {
@@ -129,6 +151,10 @@ export default function FarmLocalBackup() {
     if (!preview || confirmation !== "RESTORE" || selected.size === 0) return;
 
     try {
+      const snapshot = buildCurrentSnapshot(selected);
+      const snapshotRaw = JSON.stringify(snapshot);
+      if (snapshotRaw.length <= MAX_BACKUP_BYTES) localStorage.setItem(PRE_RESTORE_KEY, snapshotRaw);
+
       let restored = 0;
       for (const item of available) {
         if (!selected.has(item.id)) continue;
@@ -138,7 +164,7 @@ export default function FarmLocalBackup() {
         restored += 1;
       }
       setConfirmation("");
-      setStatus(`Restored ${restored} selected Farm OS data ${restored === 1 ? "area" : "areas"} to this browser.`);
+      setStatus(`Restored ${restored} selected Farm OS data ${restored === 1 ? "area" : "areas"} to this browser. A pre-restore local snapshot was saved where valid current data existed.`);
     } catch {
       setStatus("This browser could not restore the selected data. Existing stores were left as-is where possible.");
     }
@@ -153,7 +179,7 @@ export default function FarmLocalBackup() {
       <section className="farm-panel" aria-labelledby="farm-backup-export-heading">
         <span className="eyebrow">Export</span>
         <h2 id="farm-backup-export-heading">Back up the Farm OS working set.</h2>
-        <p>Create one JSON file containing valid browser-local records, planner data, calendar tasks, journal entries, garden layout, schematic map, and funding tracker data that exist on this device. The temporary weather cache is intentionally excluded.</p>
+        <p>Create one JSON file containing valid browser-local records, inventory, plantings, planner data, calendar tasks, journal entries, garden layout, schematic map, and funding tracker data that exist on this device. The temporary weather cache is intentionally excluded.</p>
         <div className="farm-actions">
           <button className="farm-action" type="button" onClick={exportAll}>Download local Farm OS backup</button>
         </div>
@@ -162,7 +188,7 @@ export default function FarmLocalBackup() {
       <section className="farm-panel" aria-labelledby="farm-backup-restore-heading">
         <span className="eyebrow">Restore</span>
         <h2 id="farm-backup-restore-heading">Inspect before replacing local data.</h2>
-        <p>A backup is validated against a fixed allowlist and per-store size limits before any restore controls are enabled. Unknown keys are ignored.</p>
+        <p>A backup is validated against a fixed allowlist and per-store size limits before any restore controls are enabled. Unknown keys are ignored. Before selected valid stores are replaced, Farm OS saves a browser-local pre-restore snapshot of the current selected data when possible.</p>
         <input ref={inputRef} type="file" accept="application/json,.json" onChange={inspectFile} aria-label="Choose Farm OS backup file" />
 
         {available.length ? (
