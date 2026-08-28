@@ -10,6 +10,7 @@ export default function robots() {
       disallow: [
         "/farm-os",
         "/farm-today",
+        "/farm-weekly-review",
         "/farm-records",
         "/farm-analytics",
         "/farm-planner",
