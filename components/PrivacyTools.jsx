@@ -16,6 +16,36 @@ const LOCAL_DATA = [
     detail: "Locally saved funding opportunities, statuses, deadlines, links, and notes.",
   },
   {
+    key: "price-family-farm-planner-v1",
+    id: "planner",
+    label: "Farm planner",
+    detail: "Crop plans, varieties, working spaces, dates, statuses, and planning notes.",
+  },
+  {
+    key: "price-family-farm-calendar-v1",
+    id: "calendar",
+    label: "Farm calendar",
+    detail: "Planting, harvest, maintenance, market, funding, weather, and other local tasks.",
+  },
+  {
+    key: "price-family-farm-journal-v1",
+    id: "journal",
+    label: "Farm journal",
+    detail: "Private browser-local field notes, observations, planning notes, and market notes.",
+  },
+  {
+    key: "price-family-farm-garden-layout-v1",
+    id: "garden-layout",
+    label: "Garden layout builder",
+    detail: "Saved bed names, dimensions, crop uses, and layout notes.",
+  },
+  {
+    key: "price-family-farm-map-v1",
+    id: "farm-map",
+    label: "Schematic farm map",
+    detail: "Non-geographic working-zone labels, uses, area estimates, statuses, and notes.",
+  },
+  {
     key: "price-family-farm-weather-v1",
     id: "weather",
     label: "Weather cache",
@@ -61,6 +91,9 @@ export default function PrivacyTools() {
       <h2 style={{ marginTop: 8 }}>Clear Farm OS data from this device.</h2>
       <p>
         These controls only affect this browser profile. They do not delete exported JSON/CSV backups, messages already sent through the contact forms, or data stored on another device.
+      </p>
+      <p>
+        Farm OS planning tools are included individually so you can remove one working area without wiping unrelated records.
       </p>
 
       <div className="farm-record-list" role="group" aria-label="Local data areas to clear">
