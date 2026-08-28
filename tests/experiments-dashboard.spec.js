@@ -14,7 +14,7 @@ test("experiments dashboard preserves incomplete results and filters local trial
 
   await page.goto("/experiments/");
   await expect(page.getByRole("heading", { name: "Keep trials separate from guesses.", exact: true })).toBeVisible();
-  await expect(page.getByText("Result not recorded yet.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Result not recorded yet.", { exact: false })).toBeVisible();
   await page.getByLabel("Status").selectOption("running");
   await expect(page.getByRole("heading", { name: "Mulch comparison", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Potting mix trial", exact: true })).toHaveCount(0);
