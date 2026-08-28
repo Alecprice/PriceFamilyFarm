@@ -9,7 +9,7 @@ test("garden layout builder saves bed dimensions and totals area locally", async
   await page.getByRole("button", { name: "Add garden bed", exact: true }).click();
 
   await expect(page.getByText("Bed A", { exact: true })).toBeVisible();
-  await expect(page.getByText("48 ft²", { exact: false })).toBeVisible();
+  await expect(page.getByText("48 ft²", { exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByText("Bed A", { exact: true })).toBeVisible();
   const saved = await page.evaluate(() => localStorage.getItem("price-family-farm-garden-layout-v1"));
