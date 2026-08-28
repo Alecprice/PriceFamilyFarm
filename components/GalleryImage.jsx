@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useLightbox } from "./Lightbox";
+import styles from "./GalleryImage.module.css";
 
 export default function GalleryImage({ src, alt }) {
   const open = useLightbox();
@@ -9,7 +10,7 @@ export default function GalleryImage({ src, alt }) {
     <button
       type="button"
       onClick={() => open(src, alt)}
-      className="gal-figure gal-trigger"
+      className={`gal-figure ${styles.trigger}`}
       aria-label={`Open larger photo: ${alt}`}
     >
       <Image
