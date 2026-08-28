@@ -1,0 +1,62 @@
+/* Cross-site accessibility safeguards kept separate from the visual design system. */
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--mustard);
+  outline-offset: 3px;
+}
+
+.nav-toggle {
+  min-width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+main :where(p, li) > a:not(.btn):not(.farm-action) {
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+main :where(p, li) > a:not(.btn):not(.farm-action):hover {
+  text-decoration-thickness: 0.13em;
+}
+
+@media (max-width: 780px) {
+  .nav-links a,
+  .nav-dropdown-toggle {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --line: rgba(42, 36, 23, 0.38);
+    --line-light: rgba(248, 243, 230, 0.58);
+  }
+
+  .nav-links a,
+  .nav-dropdown-toggle,
+  .btn,
+  .farm-action,
+  .farm-panel,
+  .packet {
+    border-width: 2px;
+  }
+}
