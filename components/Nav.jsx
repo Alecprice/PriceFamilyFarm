@@ -28,6 +28,8 @@ const NAV_ITEMS = [
       { href: "/farm-planner", label: "Farm Planner" },
       { href: "/plantings", label: "Plantings & Successions" },
       { href: "/farm-calendar", label: "Farm Calendar" },
+      { href: "/market-planner", label: "Market Planner" },
+      { href: "/weekly-work-sheet", label: "Weekly Work Sheet" },
       { href: "/learn/garden-layout-builder", label: "Garden Layout Builder" },
       { href: "/farm-map", label: "Schematic Farm Map" },
       { href: "/growing-guide", label: "Growing Guide" },
