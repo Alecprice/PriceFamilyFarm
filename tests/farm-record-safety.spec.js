@@ -30,5 +30,7 @@ test("Farm Records requires confirmation before deleting browser-local records",
 
   stored = await page.evaluate(() => JSON.parse(localStorage.getItem("price-family-farm-records-v2")));
   expect(stored.harvests).toHaveLength(0);
+
+  await page.getByRole("tab", { name: "Backup & export", exact: true }).click();
   await expect(page.getByRole("link", { name: "Open full Farm OS backup", exact: true })).toBeVisible();
 });
