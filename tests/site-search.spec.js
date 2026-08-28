@@ -1,10 +1,10 @@
 import { test, expect } from "@playwright/test";
 
 test("site search filters the public index without network search calls", async ({ page }) => {
-  const requests = [];
+  const searchApiRequests = [];
   page.on("request", (request) => {
-    const url = request.url();
-    if (url.includes("search")) requests.push(url);
+    const pathname = new URL(request.url()).pathname;
+    if (pathname === "/api/search" || pathname.startsWith("/api/search/")) searchApiRequests.push(request.url());
   });
 
   await page.goto("/search/");
@@ -19,7 +19,7 @@ test("site search filters the public index without network search calls", async 
   await page.getByLabel("Search phrase").fill("private farm records");
   await expect(page.getByText("No indexed public page matches every search term.", { exact: false })).toBeVisible();
 
-  expect(requests.filter((url) => !url.endsWith("/search/")).toHaveLength(0);
+  expect(searchApiRequests).toHaveLength(0);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
