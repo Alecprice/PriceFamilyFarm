@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import styles from "./Lightbox.module.css";
 
 const LightboxContext = createContext(() => {});
 
@@ -63,7 +64,7 @@ export function LightboxProvider({ children }) {
           <button ref={closeRef} type="button" className="lightbox-close" onClick={close} aria-label="Close expanded photo">
             Close ✕
           </button>
-          <div className="lightbox-media">
+          <div className={styles.media}>
             <Image src={src} alt={alt} fill sizes="92vw" priority style={{ objectFit: "contain" }} />
           </div>
         </div>
