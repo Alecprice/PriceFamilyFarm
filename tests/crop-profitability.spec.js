@@ -41,7 +41,8 @@ test("crop profitability compares recorded margin, mapped area, units, and seaso
 
   await expect(page.getByRole("heading", { name: "2026", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "2025", exact: true })).toBeVisible();
-  await expect(page.getByText("Strongest recorded margin:", { exact: false })).toContainText("Tomato");
+  const strongest = page.locator(".farm-tools-note").filter({ hasText: "Strongest recorded margin:" });
+  await expect(strongest).toContainText("Tomato");
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/i);
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
 });
