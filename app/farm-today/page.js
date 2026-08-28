@@ -1,6 +1,7 @@
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 import FarmToday from "@/components/FarmToday";
+import FarmTodayActions from "@/components/FarmTodayActions";
 
 export const metadata = {
   title: "Farm Today · Price Family Farm",
@@ -21,6 +22,7 @@ export default function FarmTodayPage() {
       </header>
       <main>
         <div className="wrap">
+          <FarmTodayActions />
           <FarmToday />
         </div>
       </main>
