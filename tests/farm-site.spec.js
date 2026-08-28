@@ -25,12 +25,14 @@ test("home stays usable without horizontal overflow", async ({ page }) => {
 test("navigation exposes task-oriented destinations", async ({ page }) => {
   await page.goto("/");
   await openPrimaryNavIfCollapsed(page);
-  const farmMenu = page.getByRole("button", { name: /^Farm/ });
+
+  const primaryNav = page.getByRole("navigation", { name: "Primary" });
+  const farmMenu = primaryNav.getByRole("button", { name: /^Farm/ });
   await expect(farmMenu).toBeVisible();
   await farmMenu.click();
   await expect(farmMenu).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByRole("link", { name: "Farm Records", exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Availability", exact: true })).toBeVisible();
+  await expect(primaryNav.getByRole("link", { name: "Farm Records", exact: true })).toBeVisible();
+  await expect(primaryNav.getByRole("link", { name: "Availability", exact: true })).toBeVisible();
 });
 
 test("Farm Records persist private harvest data across reload", async ({ page }) => {
@@ -47,7 +49,8 @@ test("Farm Records persist private harvest data across reload", async ({ page })
 
 test("availability page does not claim unconfirmed stock", async ({ page }) => {
   await page.goto("/available/");
-  await expect(page.getByText("This is an interest list, not a preorder.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Inventory is confirmed manually", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Know what is coming without pretending it is already in stock.", exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Email", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Join the availability list", exact: true })).toBeVisible();
   await expectNoHorizontalOverflow(page);

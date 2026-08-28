@@ -114,7 +114,8 @@ jobs:
       - name: Install browser test runner
         if: success()
         run: |
-          npm install --no-save @playwright/test@1.55.0
+          npm install --no-save @playwright/test@1.62.1
+          npm audit --audit-level=high
           # The iPhone device profile uses WebKit while tablet/desktop use Chromium.
           npx playwright install --with-deps chromium webkit
 
