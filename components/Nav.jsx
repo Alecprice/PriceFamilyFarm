@@ -11,15 +11,21 @@ const NAV_ITEMS = [
     children: [
       { href: "/farm-os", label: "Farm OS" },
       { href: "/what-we-grow", label: "What We Grow" },
+      { href: "/available", label: "Availability" },
       { href: "/farm-records", label: "Farm Records" },
       { href: "/farm-analytics", label: "Farm Analytics" },
-      { href: "/available", label: "Availability" },
+      { href: "/farm-journal", label: "Farm Journal" },
+      { href: "/timeline", label: "Season Timeline" },
       { href: "/funding", label: "Funding & Education" },
     ],
   },
   {
     label: "Plan",
     children: [
+      { href: "/farm-planner", label: "Farm Planner" },
+      { href: "/farm-calendar", label: "Farm Calendar" },
+      { href: "/learn/garden-layout-builder", label: "Garden Layout Builder" },
+      { href: "/farm-map", label: "Schematic Farm Map" },
       { href: "/growing-guide", label: "Growing Guide" },
       { href: "/weather", label: "Growing Conditions" },
       { href: "/propagation", label: "Propagation & Grafting" },
