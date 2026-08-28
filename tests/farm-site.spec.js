@@ -31,6 +31,7 @@ test("navigation exposes task-oriented destinations", async ({ page }) => {
   await expect(farmMenu).toBeVisible();
   await farmMenu.click();
   await expect(farmMenu).toHaveAttribute("aria-expanded", "true");
+  await expect(primaryNav.getByRole("link", { name: "Farm OS", exact: true })).toBeVisible();
   await expect(primaryNav.getByRole("link", { name: "Farm Records", exact: true })).toBeVisible();
   await expect(primaryNav.getByRole("link", { name: "Farm Analytics", exact: true })).toBeVisible();
   await expect(primaryNav.getByRole("link", { name: "Availability", exact: true })).toBeVisible();
@@ -46,6 +47,31 @@ test("Farm Records persist private harvest data across reload", async ({ page })
   await expect(page.getByText("Smoke test tomato", { exact: true })).toBeVisible();
   const saved = await page.evaluate(() => localStorage.getItem("price-family-farm-records-v2"));
   expect(saved).toContain("Smoke test tomato");
+});
+
+test("Farm OS summarizes browser-local operating data", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("price-family-farm-records-v2", JSON.stringify({
+      harvests: [
+        { date: "2026-08-20", crop: "Tomato", quantity: "10", unit: "lb", destination: "sold", saleAmount: "75" },
+        { date: "2026-08-21", crop: "Pepper", quantity: "5", unit: "count", destination: "home", saleAmount: "" },
+      ],
+      experiments: [{ date: "2026-08-18", title: "Mulch comparison", crop: "Tomato", status: "running" }],
+      expenses: [{ date: "2026-08-10", crop: "Tomato", description: "Seed and potting mix", amount: "20" }],
+    }));
+    localStorage.setItem("price-family-farm-funding-v1", JSON.stringify([
+      { name: "TAEP", status: "Watch" },
+      { name: "Completed course", status: "Done" },
+    ]));
+  });
+
+  await page.goto("/farm-os/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Run the farm");
+  const summary = page.getByRole("group", { name: "Farm OS summary" });
+  await expect(summary.getByText("2", { exact: true })).toBeVisible();
+  await expect(summary.getByText("$55.00", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Open Farm Records", exact: false })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 });
 
 test("Farm Analytics calculates browser-local recorded cash margin", async ({ page }) => {
