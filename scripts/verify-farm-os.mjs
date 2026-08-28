@@ -15,13 +15,30 @@ function read(relative) {
 }
 
 const required = [
+  "app/farm-os/page.js",
+  "app/farm-today/page.js",
   "app/farm-records/page.js",
   "app/farm-analytics/page.js",
+  "app/farm-inventory/page.js",
+  "app/plantings/page.js",
+  "app/crop-profitability/page.js",
+  "app/farm-data-health/page.js",
+  "app/market-planner/page.js",
+  "app/weekly-work-sheet/page.js",
+  "app/farm-backup/page.js",
   "app/available/page.js",
   "app/funding/page.js",
   "app/weather/page.js",
   "components/FarmRecordWorkspace.jsx",
   "components/FarmAnalyticsDashboard.jsx",
+  "components/FarmInventory.jsx",
+  "components/PlantingTracker.jsx",
+  "components/CropProfitability.jsx",
+  "components/FarmDataHealth.jsx",
+  "components/FarmMarketPlanner.jsx",
+  "components/WeeklyWorkSheet.jsx",
+  "components/FarmOsExpansionPanel.jsx",
+  "components/FarmLocalBackup.jsx",
   "components/AvailabilityInterestForm.jsx",
   "components/FundingEducationTracker.jsx",
   "components/WeatherPanel.jsx",
@@ -42,6 +59,40 @@ expect(analytics.includes("localStorage"), "farm analytics stays browser-local")
 expect(!analytics.includes("fetch("), "farm analytics does not transmit private records");
 expect(analytics.includes("Recorded cash margin"), "farm analytics labels cash margin rather than accounting profit");
 
+const inventory = read("components/FarmInventory.jsx");
+expect(inventory.includes("price-family-farm-inventory-v1"), "farm inventory uses its approved browser-local store");
+expect(inventory.includes("reorderAt"), "farm inventory supports reorder thresholds");
+expect(!inventory.includes("fetch("), "farm inventory does not contact suppliers or a backend");
+
+const plantings = read("components/PlantingTracker.jsx");
+expect(plantings.includes("price-family-farm-plantings-v1"), "planting tracker uses its approved browser-local store");
+expect(plantings.includes("nextSuccessionDate"), "planting tracker supports succession scheduling");
+expect(plantings.includes("price-family-farm-garden-layout-v1"), "plantings can reference the local garden layout");
+expect(!plantings.includes("fetch("), "planting tracker does not transmit production data");
+
+const profitability = read("components/CropProfitability.jsx");
+expect(profitability.includes("Recorded crop economics, not accounting profit"), "crop economics disclaims incomplete accounting profit");
+expect(profitability.includes("marginPerSqFt"), "crop economics supports recorded per-square-foot margin where mapped area exists");
+expect(!profitability.includes("fetch("), "crop economics stays browser-local");
+
+const market = read("components/FarmMarketPlanner.jsx");
+expect(market.includes("price-family-farm-market-plan-v1"), "market planner uses its approved browser-local store");
+expect(market.includes("not automatically available stock"), "market planner does not treat harvest signals as confirmed inventory");
+expect(market.includes("Aggregate interest count"), "market planner stores aggregate demand signals rather than customer identities");
+expect(!market.includes("fetch("), "market planner does not transmit private market planning data");
+
+const dataHealth = read("components/FarmDataHealth.jsx");
+expect(dataHealth.includes("price-family-farm-pre-repair-snapshot-v1"), "data health keeps a pre-repair recovery snapshot");
+expect(dataHealth.includes("price-family-farm-market-plan-v1"), "data health covers the market planner store");
+expect(dataHealth.includes("confirmation !== \"REPAIR\""), "data health requires typed repair confirmation");
+expect(!dataHealth.includes("fetch("), "data health never uploads private stores");
+
+const backup = read("components/FarmLocalBackup.jsx");
+for (const key of ["price-family-farm-inventory-v1", "price-family-farm-plantings-v1", "price-family-farm-market-plan-v1"]) {
+  expect(backup.includes(key), `Farm OS backup allowlist includes ${key}`);
+}
+expect(backup.includes("price-family-farm-pre-restore-snapshot-v1"), "Farm OS backup captures a pre-restore snapshot");
+
 const funding = read("components/FundingEducationTracker.jsx");
 expect(funding.includes("official program link"), "funding tracker warns users to verify current rules");
 expect(funding.includes("localStorage"), "funding tracker stays browser-local");
@@ -60,13 +111,30 @@ expect(weather.includes("No weather values are being guessed"), "weather fallbac
 
 const nav = read("components/Nav.jsx");
 for (const label of ["Farm", "Plan", "Learn", "Contact"]) expect(nav.includes(`label: "${label}"`), `task-oriented nav includes ${label}`);
-expect(nav.includes('label: "Farm Analytics"'), "Farm menu exposes Farm Analytics");
+for (const label of ["Farm Analytics", "Crop Profitability", "Farm Inventory", "Farm OS Data Health", "Plantings & Successions", "Market Planner", "Weekly Work Sheet"]) {
+  expect(nav.includes(`label: "${label}"`), `navigation exposes ${label}`);
+}
 
-const privatePages = [read("app/farm-records/page.js"), read("app/farm-analytics/page.js"), read("app/funding/page.js")];
+const privateRoutes = [
+  "farm-os",
+  "farm-today",
+  "farm-records",
+  "farm-analytics",
+  "farm-inventory",
+  "plantings",
+  "crop-profitability",
+  "farm-data-health",
+  "market-planner",
+  "weekly-work-sheet",
+  "funding",
+];
+const privatePages = privateRoutes.map((route) => read(`app/${route}/page.js`));
 expect(privatePages.every((source) => source.includes("index: false")), "browser-local operating pages are noindex");
 
 const robots = read("app/robots.js");
-expect(robots.includes('"/farm-analytics"'), "robots disallows private Farm Analytics route");
+for (const route of ["/farm-analytics", "/farm-inventory", "/plantings", "/crop-profitability", "/farm-data-health", "/market-planner", "/weekly-work-sheet"]) {
+  expect(robots.includes(`"${route}"`), `robots disallows private route ${route}`);
+}
 
 if (failures.length) {
   console.error(`Farm OS verification failed (${failures.length}/${checks.length}):`);
