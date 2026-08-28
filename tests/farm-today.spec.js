@@ -41,9 +41,10 @@ test("Farm Today prioritizes work and quick-captures tasks, notes, harvests, and
   await expect(page.getByText("Next 7 days", { exact: true }).locator("..").getByText("1", { exact: true })).toBeVisible();
   await expect(page.getByText("Active crop plans", { exact: true }).locator("..").getByText("1", { exact: true })).toBeVisible();
 
-  await expect(page.getByRole("heading", { name: "Check irrigation", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Water starts", exact: true })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Harvest tomatoes", exact: true })).toBeVisible();
+  const priorityQueue = page.getByRole("region", { name: "What needs attention." });
+  await expect(priorityQueue.getByRole("heading", { name: "Check irrigation", exact: true })).toBeVisible();
+  await expect(priorityQueue.getByRole("heading", { name: "Water starts", exact: true })).toBeVisible();
+  await expect(priorityQueue.getByRole("heading", { name: "Harvest tomatoes", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Tomato · Cherokee Purple", exact: true }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Dry afternoon", exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Fall lettuce seed", exact: true })).toBeVisible();
