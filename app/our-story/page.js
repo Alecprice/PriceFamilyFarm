@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
 
@@ -107,6 +108,13 @@ const ENTRIES = [
   },
 ];
 
+const storyImageProps = {
+  width: 800,
+  height: 600,
+  sizes: "(max-width: 760px) 100vw, 34vw",
+  style: { width: "100%", height: "auto" },
+};
+
 export default function OurStory() {
   return (
     <>
@@ -135,7 +143,7 @@ export default function OurStory() {
                     <h3>{e.title}</h3>
                     <p>{e.body}</p>
                   </div>
-                  <div className="entry-photo"><img src={e.img} alt={e.alt} /></div>
+                  <div className="entry-photo"><Image src={e.img} alt={e.alt} {...storyImageProps} /></div>
                 </div>
               </div>
             ))}
@@ -153,7 +161,7 @@ export default function OurStory() {
                     The full paper trail is on the <Link href="/documentation">Documentation</Link> page.
                   </p>
                 </div>
-                <div className="entry-photo"><img src="/images/collage-beds.jpg" alt="A collage of the season's raised beds and container plantings" /></div>
+                <div className="entry-photo"><Image src="/images/collage-beds.jpg" alt="A collage of the season's raised beds and container plantings" {...storyImageProps} /></div>
               </div>
             </div>
           </div>
