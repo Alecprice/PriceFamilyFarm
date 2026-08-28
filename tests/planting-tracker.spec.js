@@ -33,10 +33,12 @@ test("planting tracker persists production timing and links matching harvest rec
   await page.getByLabel("Next succession date", { exact: true }).fill(successionDate);
   await page.getByRole("button", { name: "Save planting", exact: true }).click();
 
-  await expect(page.getByRole("heading", { name: "Tomato · Cherokee Purple", exact: true })).toBeVisible();
-  await expect(page.getByText("Transplanted · Bed A · 80 ft² mapped", { exact: true })).toBeVisible();
-  await expect(page.getByText("1 linked Farm Records harvest entry · 5 lb.", { exact: true })).toBeVisible();
-  await expect(page.getByText("Next succession: " + successionDate + ".", { exact: true })).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("Tomato planting saved for Bed A.");
+  const plantingBoard = page.getByRole("region", { name: "Connect timing, space, and actual harvest records." });
+  await expect(plantingBoard.getByRole("heading", { name: "Tomato · Cherokee Purple", exact: true })).toBeVisible();
+  await expect(plantingBoard.getByText("Transplanted · Bed A · 80 ft² mapped", { exact: true })).toBeVisible();
+  await expect(plantingBoard.getByText("1 linked Farm Records harvest entry · 5 lb.", { exact: true })).toBeVisible();
+  await expect(plantingBoard.getByText("Next succession: " + successionDate + ".", { exact: true })).toBeVisible();
 
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem("price-family-farm-plantings-v1")));
   expect(stored).toHaveLength(1);
