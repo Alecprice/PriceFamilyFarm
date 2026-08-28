@@ -7,7 +7,20 @@ export default function robots() {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/farm-os", "/farm-records", "/farm-analytics", "/funding", "/privacy-tools"],
+      disallow: [
+        "/farm-os",
+        "/farm-records",
+        "/farm-analytics",
+        "/farm-planner",
+        "/farm-calendar",
+        "/farm-journal",
+        "/timeline",
+        "/farm-map",
+        "/learn/garden-layout-builder",
+        "/funding",
+        "/privacy-tools",
+        "/farm-backup",
+      ],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };
