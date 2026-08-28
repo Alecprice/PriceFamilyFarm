@@ -11,6 +11,7 @@ const NAV_ITEMS = [
     children: [
       { href: "/what-we-grow", label: "What We Grow" },
       { href: "/farm-records", label: "Farm Records" },
+      { href: "/farm-analytics", label: "Farm Analytics" },
       { href: "/available", label: "Availability" },
       { href: "/funding", label: "Funding & Education" },
     ],
