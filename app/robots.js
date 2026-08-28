@@ -13,6 +13,7 @@ export default function robots() {
         "/farm-weekly-review",
         "/farm-records",
         "/farm-analytics",
+        "/crop-profitability",
         "/farm-inventory",
         "/plantings",
         "/farm-planner",

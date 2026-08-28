@@ -14,6 +14,7 @@ const NAV_ITEMS = [
       { href: "/available", label: "Availability" },
       { href: "/farm-records", label: "Farm Records" },
       { href: "/farm-analytics", label: "Farm Analytics" },
+      { href: "/crop-profitability", label: "Crop Profitability" },
       { href: "/farm-inventory", label: "Farm Inventory" },
       { href: "/farm-journal", label: "Farm Journal" },
       { href: "/timeline", label: "Season Timeline" },
