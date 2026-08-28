@@ -22,6 +22,14 @@ main :where(p, li) > a:not(.btn):not(.farm-action):hover {
 }
 
 @media (max-width: 780px) {
+  .nav-links {
+    max-height: calc(100dvh - 74px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: max(18px, calc(env(safe-area-inset-bottom) + 12px));
+  }
+
   .nav-links a,
   .nav-dropdown-toggle {
     min-height: 44px;
