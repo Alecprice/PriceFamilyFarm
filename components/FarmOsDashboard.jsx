@@ -161,6 +161,16 @@ export default function FarmOsDashboard() {
         <div className="farm-summary-card"><span>Open calendar tasks</span><b>{ready ? summary.openTasks : "—"}</b></div>
       </div>
 
+      <section className="farm-panel" aria-labelledby="farm-os-today-heading">
+        <span className="eyebrow">Daily command center</span>
+        <h2 id="farm-os-today-heading">Start with Today.</h2>
+        <p>See overdue work, today&rsquo;s tasks, the next seven days, active crop plans, recent activity, and quick-capture controls in one private browser-local view.</p>
+        <div className="farm-actions">
+          <Link className="farm-action" href="/farm-today">Open Farm Today</Link>
+          <Link className="farm-action secondary" href="/farm-backup">Back up Farm OS</Link>
+        </div>
+      </section>
+
       <section className="farm-panel" aria-labelledby="farm-os-next-actions">
         <h2 id="farm-os-next-actions">Next farm actions.</h2>
         <p>Jump straight into the operating task you need instead of hunting through the public site.</p>
@@ -186,6 +196,7 @@ export default function FarmOsDashboard() {
         <p>{ready ? `${countLabel(Object.keys(data.found).length, "local Farm OS data store")} detected on this device.` : "Checking this browser for local Farm OS data."}</p>
         <div className="farm-actions">
           <Link className="farm-action secondary" href="/weather">Check growing conditions</Link>
+          <Link className="farm-action secondary" href="/farm-backup">Back up local farm data</Link>
           <Link className="farm-action secondary" href="/privacy-tools">Manage local farm data</Link>
         </div>
       </section>
