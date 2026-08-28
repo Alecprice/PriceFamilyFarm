@@ -32,6 +32,7 @@ test("navigation exposes task-oriented destinations", async ({ page }) => {
   await farmMenu.click();
   await expect(farmMenu).toHaveAttribute("aria-expanded", "true");
   await expect(primaryNav.getByRole("link", { name: "Farm Records", exact: true })).toBeVisible();
+  await expect(primaryNav.getByRole("link", { name: "Farm Analytics", exact: true })).toBeVisible();
   await expect(primaryNav.getByRole("link", { name: "Availability", exact: true })).toBeVisible();
 });
 
@@ -45,6 +46,29 @@ test("Farm Records persist private harvest data across reload", async ({ page })
   await expect(page.getByText("Smoke test tomato", { exact: true })).toBeVisible();
   const saved = await page.evaluate(() => localStorage.getItem("price-family-farm-records-v2"));
   expect(saved).toContain("Smoke test tomato");
+});
+
+test("Farm Analytics calculates browser-local recorded cash margin", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("price-family-farm-records-v2", JSON.stringify({
+      harvests: [
+        { date: "2026-08-20", crop: "Tomato", variety: "Cherokee Purple", quantity: "10", unit: "lb", destination: "sold", saleAmount: "75", notes: "" },
+      ],
+      experiments: [
+        { date: "2026-08-18", title: "Mulch comparison", crop: "Tomato", status: "running" },
+      ],
+      expenses: [
+        { date: "2026-08-10", crop: "Tomato", description: "Seed and potting mix", category: "seed-plant", amount: "20", notes: "" },
+      ],
+    }));
+  });
+
+  await page.goto("/farm-analytics/");
+  await expect(page.getByRole("heading", { name: "Turn farm records into better next-season decisions.", exact: true })).toBeVisible();
+  await expect(page.getByText("$55.00", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Tomato", exact: true })).toBeVisible();
+  await expect(page.getByText("Sales $75.00 · tagged expenses $20.00", { exact: true })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
 });
 
 test("availability page does not claim unconfirmed stock", async ({ page }) => {
