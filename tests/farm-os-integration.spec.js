@@ -23,12 +23,21 @@ test("Farm OS summarizes recovered planning tools without network sync", async (
   await expect(page.getByText("$100.00", { exact: true })).toBeVisible();
   await expect(page.getByText("1 active crop plan is in this browser.", { exact: true })).toBeVisible();
   await expect(page.getByText("1 open task is past its planned date.", { exact: true })).toBeVisible();
-  await expect(page.getByText("1 journal entries · 1 running experiments", { exact: true })).toBeVisible();
-  await expect(page.getByText("1 garden beds · 48 ft² mapped", { exact: true })).toBeVisible();
-  await expect(page.getByText("1 funding items · 1 zones need work", { exact: true })).toBeVisible();
+  await expect(page.getByText("1 journal entry · 1 running experiment", { exact: true })).toBeVisible();
+  await expect(page.getByText("1 garden bed · 48 ft² mapped", { exact: true })).toBeVisible();
+  await expect(page.getByText("1 funding item · 1 zone needs work", { exact: true })).toBeVisible();
   await expect(page.getByText("7 local Farm OS data stores detected on this device.", { exact: true })).toBeVisible();
 
-  expect(requests.some((url) => url.includes("api.weather.gov") || url.includes("web3forms"))).toBe(false);
+  const contactedExternalFarmServices = requests.some((rawUrl) => {
+    try {
+      const hostname = new URL(rawUrl).hostname;
+      return hostname === "api.weather.gov" || hostname === "api.web3forms.com";
+    } catch {
+      return false;
+    }
+  });
+  expect(contactedExternalFarmServices).toBe(false);
+
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
