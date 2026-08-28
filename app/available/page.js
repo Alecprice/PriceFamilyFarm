@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import AvailabilityGuide from "@/components/AvailabilityGuide";
 import AvailabilityInterestForm from "@/components/AvailabilityInterestForm";
 
 export const metadata = {
@@ -21,6 +22,7 @@ export default function AvailabilityPage() {
       </header>
       <main className="farm-tools-shell">
         <div className="wrap">
+          <AvailabilityGuide />
           <div className="interest-grid">
             <section>
               <span className="availability-status">Inventory is confirmed manually</span>
