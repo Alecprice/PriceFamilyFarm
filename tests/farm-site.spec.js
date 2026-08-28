@@ -66,8 +66,9 @@ test("Farm Analytics calculates browser-local recorded cash margin", async ({ pa
   await page.goto("/farm-analytics/");
   await expect(page.getByRole("heading", { name: "Turn farm records into better next-season decisions.", exact: true })).toBeVisible();
   await expect(page.getByText("$55.00", { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Tomato", exact: true })).toBeVisible();
-  await expect(page.getByText("Sales $75.00 · tagged expenses $20.00", { exact: true })).toBeVisible();
+  const cropPerformance = page.locator('section[aria-labelledby="crop-performance-heading"]');
+  await expect(cropPerformance.getByRole("heading", { name: "Tomato", exact: true })).toBeVisible();
+  await expect(cropPerformance.getByText("Sales $75.00 · tagged expenses $20.00", { exact: true })).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
 
