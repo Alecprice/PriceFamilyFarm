@@ -72,7 +72,7 @@ function buildEvents() {
     const eventDate = date(item?.date);
     const title = text(item?.title, 160);
     if (!eventDate || !title) continue;
-    events.push({ id: `journal-${text(item?.id, 120)}-${eventDate}-${events.length}`, date: eventDate, type: "Journal", title, detail: text(item?.category, 50), note: text(item?.note ?? item?.notes, 800), href: "/farm-journal" });
+    events.push({ id: `journal-${text(item?.id, 120)}-${eventDate}-${events.length}`, date: eventDate, type: "Journal", title, detail: text(item?.category, 50), note: text(item?.body, 800), href: "/farm-journal" });
   }
 
   for (const item of Array.isArray(calendar) ? calendar.slice(0, 1_000) : []) {
