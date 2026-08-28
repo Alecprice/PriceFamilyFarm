@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { localDay } from "@/lib/localDate";
 
@@ -121,6 +122,12 @@ function sanitizeRecords(value) {
   };
 }
 
+function recordName(section, item) {
+  if (section === "harvests") return [item?.crop, item?.variety].filter(Boolean).join(" · ") || "harvest record";
+  if (section === "experiments") return item?.title || "experiment record";
+  return item?.description || "expense record";
+}
+
 export default function FarmRecordWorkspace() {
   const [records, setRecords] = useState(EMPTY);
   const [loaded, setLoaded] = useState(false);
@@ -162,11 +169,15 @@ export default function FarmRecordWorkspace() {
     const entry = sanitizeHarvest({
       date: data.get("date"), crop: data.get("crop"), variety: data.get("variety"), location: data.get("location"), quantity: data.get("quantity"), unit: data.get("unit"), destination: data.get("destination"), saleAmount: data.get("saleAmount"), notes: data.get("notes"),
     }, records.harvests.length);
-    if (!entry) return;
+    if (!entry) {
+      setStorageNotice("Harvest not saved. Check the date, crop, and quantity.");
+      return;
+    }
     entry.id = id("harvest");
     setRecords((current) => ({ ...current, harvests: [entry, ...current.harvests].slice(0, MAX_RECORDS_PER_SECTION) }));
     event.currentTarget.reset();
     event.currentTarget.elements.date.value = localDay();
+    setStorageNotice("Harvest saved in this browser.");
   }
 
   function addExperiment(event) {
@@ -175,11 +186,15 @@ export default function FarmRecordWorkspace() {
     const entry = sanitizeExperiment({
       date: data.get("date"), title: data.get("title"), crop: data.get("crop"), question: data.get("question"), variable: data.get("variable"), control: data.get("control"), measure: data.get("measure"), status: data.get("status"), result: data.get("result"),
     }, records.experiments.length);
-    if (!entry) return;
+    if (!entry) {
+      setStorageNotice("Experiment not saved. Check the date and title.");
+      return;
+    }
     entry.id = id("experiment");
     setRecords((current) => ({ ...current, experiments: [entry, ...current.experiments].slice(0, MAX_RECORDS_PER_SECTION) }));
     event.currentTarget.reset();
     event.currentTarget.elements.date.value = localDay();
+    setStorageNotice("Experiment saved in this browser.");
   }
 
   function addExpense(event) {
@@ -188,19 +203,29 @@ export default function FarmRecordWorkspace() {
     const entry = sanitizeExpense({
       date: data.get("date"), category: data.get("category"), description: data.get("description"), crop: data.get("crop"), amount: data.get("amount"), notes: data.get("notes"),
     }, records.expenses.length);
-    if (!entry) return;
+    if (!entry) {
+      setStorageNotice("Expense not saved. Check the date, description, and amount.");
+      return;
+    }
     entry.id = id("expense");
     setRecords((current) => ({ ...current, expenses: [entry, ...current.expenses].slice(0, MAX_RECORDS_PER_SECTION) }));
     event.currentTarget.reset();
     event.currentTarget.elements.date.value = localDay();
+    setStorageNotice("Expense saved in this browser.");
   }
 
   function remove(section, recordId) {
-    setRecords((current) => ({ ...current, [section]: current[section].filter((item) => item.id !== recordId) }));
+    const item = records[section]?.find((candidate) => candidate.id === recordId);
+    if (!item) return;
+    const label = recordName(section, item);
+    if (!window.confirm(`Delete “${label}”? This cannot be undone unless you have a backup.`)) return;
+    setRecords((current) => ({ ...current, [section]: current[section].filter((candidate) => candidate.id !== recordId) }));
+    setStorageNotice(`${section === "harvests" ? "Harvest" : section === "experiments" ? "Experiment" : "Expense"} deleted.`);
   }
 
   function exportJson() {
     download(`price-family-farm-records-${localDay()}.json`, JSON.stringify(records, null, 2), "application/json");
+    setStorageNotice("JSON records backup prepared for download.");
   }
 
   function exportCsv() {
@@ -209,6 +234,7 @@ export default function FarmRecordWorkspace() {
     records.experiments.forEach((item) => rows.push(["experiment", item.date, item.crop, item.title, "", "", "", "", item.status, [item.question, item.result].filter(Boolean).join(" — ")]));
     records.expenses.forEach((item) => rows.push(["expense", item.date, item.crop, item.description, "", "", "", item.amount, item.category, item.notes]));
     download(`price-family-farm-records-${localDay()}.csv`, rows.map((row) => row.map(csvEscape).join(",")).join("\n"), "text/csv;charset=utf-8");
+    setStorageNotice("CSV records export prepared for download.");
   }
 
   function importJson(event) {
@@ -227,6 +253,11 @@ export default function FarmRecordWorkspace() {
         if (raw.length > MAX_BACKUP_BYTES) throw new Error("too-large");
         const sanitized = sanitizeRecords(JSON.parse(raw));
         if (!sanitized) throw new Error("invalid");
+        const currentCount = records.harvests.length + records.experiments.length + records.expenses.length;
+        if (currentCount && !window.confirm(`Restore this records backup? It will replace ${currentCount} current record${currentCount === 1 ? "" : "s"} in this browser.`)) {
+          setStorageNotice("Records restore cancelled. Existing browser records were not changed.");
+          return;
+        }
         setRecords(sanitized);
         setStorageNotice("Backup restored after validating and sanitizing its records.");
       } catch {
@@ -342,6 +373,7 @@ function BackupPanel({ onJson, onCsv, onImport }) {
         <button className="farm-action" type="button" onClick={onJson}>Download JSON backup</button>
         <button className="farm-action secondary" type="button" onClick={onCsv}>Download CSV</button>
         <label className="farm-action secondary" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center" }}>Restore JSON backup<input type="file" accept="application/json,.json" onChange={onImport} style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }} /></label>
+        <Link className="farm-action secondary" href="/farm-backup">Open full Farm OS backup</Link>
       </div>
     </section>
   );
