@@ -15,6 +15,7 @@ export default function robots() {
         "/farm-analytics",
         "/crop-profitability",
         "/farm-inventory",
+        "/farm-data-health",
         "/plantings",
         "/farm-planner",
         "/farm-calendar",
