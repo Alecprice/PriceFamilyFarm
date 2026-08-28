@@ -117,7 +117,7 @@ export default function OurStory() {
           <span className="eyebrow on-dark">Our Story</span>
           <h1>One growing season, from bare root to registered farm.</h1>
           <p>
-            Price Family Farm started this year on Magnolia Dr in Greeneville. No inherited operation, no
+            Price Family Farm started this year in Greeneville, Tennessee. No inherited operation, no
             shortcuts. Here&rsquo;s the season as it actually happened, month by month.
           </p>
         </div>

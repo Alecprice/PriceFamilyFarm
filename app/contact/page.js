@@ -4,7 +4,7 @@ import ContactForm from "@/components/ContactForm";
 
 export const metadata = {
   title: "Contact · Price Family Farm",
-  description: "Get in touch with Price Family Farm in Greeneville, East Tennessee, about produce, plant starts, the farmers market, or visiting the farm.",
+  description: "Get in touch with Price Family Farm in Greeneville, East Tennessee, about produce, plant starts, availability, or pickup questions.",
 };
 
 export default function Contact() {
@@ -17,14 +17,17 @@ export default function Contact() {
           <span className="eyebrow on-dark">Contact</span>
           <h1>Get in touch.</h1>
           <p>
-            Questions about what's in season, plant starts, the farmers market, or just want to say hello?
-            Send a message and it'll land straight in our inbox.
+            Questions about what&rsquo;s in season, plant starts, availability, or just want to say hello?
+            Send a message and it&rsquo;ll land straight in our inbox.
           </p>
         </div>
       </header>
 
       <section>
         <div className="wrap" style={{ maxWidth: 640 }}>
+          <div className="farm-tools-note">
+            <strong>Location privacy.</strong> The public site intentionally lists Greeneville and Greene County rather than a residential street address. Pickup or visit details are shared directly only when they are relevant and confirmed.
+          </div>
           <ContactForm />
         </div>
       </section>
