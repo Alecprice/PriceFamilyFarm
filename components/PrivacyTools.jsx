@@ -22,6 +22,18 @@ const LOCAL_DATA = [
     detail: "Crop plans, varieties, working spaces, dates, statuses, and planning notes.",
   },
   {
+    key: "price-family-farm-plantings-v1",
+    id: "plantings",
+    label: "Plantings & successions",
+    detail: "Browser-local crop, bed, timing, spacing, expected harvest, and succession records.",
+  },
+  {
+    key: "price-family-farm-inventory-v1",
+    id: "inventory",
+    label: "Farm inventory",
+    detail: "Supply names, quantities, reorder thresholds, suppliers, costs, and notes.",
+  },
+  {
     key: "price-family-farm-calendar-v1",
     id: "calendar",
     label: "Farm calendar",
@@ -50,6 +62,30 @@ const LOCAL_DATA = [
     id: "weather",
     label: "Weather cache",
     detail: "The recent National Weather Service forecast cached by this browser.",
+  },
+  {
+    key: "price-family-farm-backup-meta-v1",
+    id: "backup-meta",
+    label: "Backup history metadata",
+    detail: "The date and store count from the most recent Farm OS backup prepared in this browser.",
+  },
+  {
+    key: "price-family-farm-pre-restore-snapshot-v1",
+    id: "pre-restore",
+    label: "Pre-restore recovery snapshot",
+    detail: "A local safety copy captured immediately before the most recent validated restore, when available.",
+  },
+  {
+    key: "price-family-farm-pre-repair-snapshot-v1",
+    id: "pre-repair",
+    label: "Pre-repair recovery snapshot",
+    detail: "A local safety copy captured before the most recent Farm OS data-health repair, when available.",
+  },
+  {
+    key: "price-family-farm-schema-meta-v1",
+    id: "schema-meta",
+    label: "Schema maintenance metadata",
+    detail: "The local Farm OS maintenance/schema version and last repair timestamp.",
   },
 ];
 
@@ -93,7 +129,7 @@ export default function PrivacyTools() {
         These controls only affect this browser profile. They do not delete exported JSON/CSV backups, messages already sent through the contact forms, or data stored on another device.
       </p>
       <p>
-        Farm OS planning tools are included individually so you can remove one working area without wiping unrelated records.
+        Farm OS working tools and local recovery metadata are included individually so you can remove one area without wiping unrelated records.
       </p>
 
       <div className="farm-record-list" role="group" aria-label="Local data areas to clear">
