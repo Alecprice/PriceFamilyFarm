@@ -24,12 +24,10 @@ export default function sitemap() {
 
     "/learn",
     "/learn/bugs",
-    "/learn/garden-layout-builder",
     "/learn/garden-planning",
     "/learn/permaculture",
     "/learn/plant-diseases",
     "/learn/year-round",
-    "/my-growing-journey",
   ];
 
   const cropRoutes = FARM_CROPS.map((crop) => `/crops/${crop.slug}`);

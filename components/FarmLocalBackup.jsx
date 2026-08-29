@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { localDay } from "@/lib/localDate";
+import { isValidBackupCollection, isValidPlanShape } from "@/lib/planner/plannerStorage";
 
 const MAX_BACKUP_BYTES = 9_500_000;
 const BACKUP_META_KEY = "price-family-farm-backup-meta-v1";
@@ -10,6 +11,8 @@ const STORES = [
   { id: "records", key: "price-family-farm-records-v2", label: "Farm records", max: 2_000_000, kind: "object" },
   { id: "funding", key: "price-family-farm-funding-v1", label: "Funding & education", max: 500_000, kind: "array" },
   { id: "planner", key: "price-family-farm-planner-v1", label: "Farm planner", max: 1_000_000, kind: "array" },
+  { id: "journey", key: "pff.growingJourney.v1", label: "My Growing Journey", max: 750_000, kind: "journey" },
+  { id: "journey-backups", key: "pff.growingJourney.backups.v1", label: "Growing Journey recovery snapshots", max: 4_000_000, kind: "journey-backups" },
   { id: "calendar", key: "price-family-farm-calendar-v1", label: "Farm calendar", max: 1_000_000, kind: "array" },
   { id: "journal", key: "price-family-farm-journal-v1", label: "Farm journal", max: 1_000_000, kind: "array" },
   { id: "garden", key: "price-family-farm-garden-layout-v1", label: "Garden layout", max: 500_000, kind: "array" },
@@ -19,9 +22,24 @@ const STORES = [
   { id: "market", key: "price-family-farm-market-plan-v1", label: "Market planner", max: 750_000, kind: "array" },
 ];
 
+function safeObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value);
+}
+
+function validJourneyPlan(value) {
+  return isValidPlanShape(value);
+}
+
+function validJourneyBackups(value) {
+  return isValidBackupCollection(value);
+}
+
 function validStoreValue(store, value) {
   if (store.kind === "array" && !Array.isArray(value)) return false;
-  if (store.kind === "object" && (!value || typeof value !== "object" || Array.isArray(value))) return false;
+  if (store.kind === "object" && !safeObject(value)) return false;
+  if (store.kind === "journey" && !validJourneyPlan(value)) return false;
+  if (store.kind === "journey-backups" && !validJourneyBackups(value)) return false;
+
   try {
     return JSON.stringify(value).length <= store.max;
   } catch {

@@ -84,14 +84,36 @@ expect(!market.includes("fetch("), "market planner does not transmit private mar
 const dataHealth = read("components/FarmDataHealth.jsx");
 expect(dataHealth.includes("price-family-farm-pre-repair-snapshot-v1"), "data health keeps a pre-repair recovery snapshot");
 expect(dataHealth.includes("price-family-farm-market-plan-v1"), "data health covers the market planner store");
+expect(dataHealth.includes("pff.growingJourney.v1"), "data health covers the Growing Journey store");
+expect(dataHealth.includes("pff.growingJourney.backups.v1"), "data health covers Growing Journey recovery snapshots");
 expect(dataHealth.includes("confirmation !== \"REPAIR\""), "data health requires typed repair confirmation");
 expect(!dataHealth.includes("fetch("), "data health never uploads private stores");
 
 const backup = read("components/FarmLocalBackup.jsx");
-for (const key of ["price-family-farm-inventory-v1", "price-family-farm-plantings-v1", "price-family-farm-market-plan-v1"]) {
+for (const key of [
+  "price-family-farm-inventory-v1",
+  "price-family-farm-plantings-v1",
+  "price-family-farm-market-plan-v1",
+  "pff.growingJourney.v1",
+  "pff.growingJourney.backups.v1",
+]) {
   expect(backup.includes(key), `Farm OS backup allowlist includes ${key}`);
 }
 expect(backup.includes("price-family-farm-pre-restore-snapshot-v1"), "Farm OS backup captures a pre-restore snapshot");
+
+const privacy = read("components/PrivacyTools.jsx");
+expect(privacy.includes("pff.growingJourney.v1"), "privacy tools expose Growing Journey local data");
+expect(privacy.includes("pff.growingJourney.backups.v1"), "privacy tools expose Growing Journey recovery snapshots");
+
+const journeyStorage = read("lib/planner/plannerStorage.js");
+expect(journeyStorage.includes("MAX_PLAN_BYTES"), "Growing Journey enforces a plan-size boundary");
+expect(journeyStorage.includes("MAX_BACKUP_BYTES"), "Growing Journey enforces a recovery-snapshot boundary");
+expect(journeyStorage.includes("export function isValidPlanShape"), "Growing Journey exposes canonical deep plan validation");
+expect(journeyStorage.includes("isValidCropRecord"), "Growing Journey validates imported crop records");
+expect(journeyStorage.includes("isValidTaskRecord"), "Growing Journey validates imported custom tasks");
+expect(journeyStorage.includes("raw.length>MAX_PLAN_BYTES") || journeyStorage.includes("raw.length > MAX_PLAN_BYTES"), "Growing Journey rejects oversized stored plans before parsing");
+expect(backup.includes("isValidPlanShape"), "Farm OS backup reuses canonical Growing Journey validation");
+expect(dataHealth.includes("isValidPlanShape"), "Data Health reuses canonical Growing Journey validation");
 
 const funding = read("components/FundingEducationTracker.jsx");
 expect(funding.includes("official program link"), "funding tracker warns users to verify current rules");
@@ -104,6 +126,13 @@ expect(availability.includes('name="botcheck"'), "availability form includes spa
 const contact = read("components/ContactForm.jsx");
 expect(contact.includes('name="botcheck"'), "contact form includes spam honeypot");
 expect(!contact.includes("alecjordanprice@gmail.com"), "contact source does not publish private inbox address");
+
+const yearRoundCalendar = read("components/planner/YearRoundCalendar.jsx");
+expect(yearRoundCalendar.includes('role="tablist"'), "year-round calendar exposes an ARIA tablist");
+expect(yearRoundCalendar.includes("ArrowRight"), "year-round calendar supports ArrowRight tab navigation");
+expect(yearRoundCalendar.includes("ArrowLeft"), "year-round calendar supports ArrowLeft tab navigation");
+expect(yearRoundCalendar.includes("'Home'"), "year-round calendar supports Home tab navigation");
+expect(yearRoundCalendar.includes("'End'"), "year-round calendar supports End tab navigation");
 
 const weather = read("components/WeatherPanel.jsx");
 expect(weather.includes("Live conditions are temporarily unavailable"), "weather has an explicit unavailable fallback");

@@ -7,6 +7,7 @@ export const metadata = {
   title: "My Growing Journey | Price Family Farm",
   description:
     "Build a crop-by-crop growing timeline with stage tasks, calendar reminders, saved beds, and local plan backup.",
+  robots: { index: false, follow: false },
 };
 
 export default function Page() {

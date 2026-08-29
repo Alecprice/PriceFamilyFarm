@@ -108,6 +108,26 @@ expect(privacyPage.includes("index: false"), "privacy tools page is noindex");
 const robots = read("app/robots.js");
 expect(robots.includes('"/privacy-tools"'), "robots policy disallows privacy tools route");
 
+const journeyPage = read("app/my-growing-journey/page.js");
+expect(
+  journeyPage.includes("robots: { index: false, follow: false }"),
+  "Growing Journey private workspace is noindex"
+);
+expect(
+  robots.includes('"/my-growing-journey"'),
+  "robots policy disallows Growing Journey private workspace"
+);
+
+const sitemap = read("app/sitemap.js");
+expect(
+  !sitemap.includes('"/my-growing-journey"'),
+  "public sitemap excludes Growing Journey private workspace"
+);
+expect(
+  !sitemap.includes('"/learn/garden-layout-builder"'),
+  "public sitemap excludes private Garden Layout Builder"
+);
+
 expect(!fs.existsSync(path.join(root, ".env")), ".env is not committed");
 expect(!fs.existsSync(path.join(root, ".env.local")), ".env.local is not committed");
 expect(fs.existsSync(path.join(root, "public/.well-known/security.txt")), "security.txt is published");
