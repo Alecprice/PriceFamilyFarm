@@ -41,18 +41,28 @@ test("Growing Journey rejects oversized and malformed imports without replacing 
 
   const fileInput = page.locator('input[type="file"][accept*="application/json"]');
 
-  const oversizedDialog = page.waitForEvent("dialog");
+  let oversizedMessage = "";
+  page.once("dialog", async (dialog) => {
+    oversizedMessage = dialog.message();
+    await dialog.dismiss();
+  });
+
   await fileInput.setInputFiles({
     name: "oversized-growing-journey.json",
     mimeType: "application/json",
     buffer: Buffer.alloc(750_001, 32),
   });
 
-  const oversized = await oversizedDialog;
-  expect(oversized.message()).toContain("larger than the allowed local safety limit");
-  await oversized.dismiss();
+  expect(oversizedMessage).toContain(
+    "larger than the allowed local safety limit"
+  );
 
-  const malformedDialog = page.waitForEvent("dialog");
+  let malformedMessage = "";
+  page.once("dialog", async (dialog) => {
+    malformedMessage = dialog.message();
+    await dialog.dismiss();
+  });
+
   await fileInput.setInputFiles({
     name: "malformed-growing-journey.json",
     mimeType: "application/json",
@@ -70,9 +80,9 @@ test("Growing Journey rejects oversized and malformed imports without replacing 
     ),
   });
 
-  const malformed = await malformedDialog;
-  expect(malformed.message()).toContain("custom tasks are malformed");
-  await malformed.dismiss();
+  expect(malformedMessage).toContain(
+    "custom tasks are malformed"
+  );
 
   const storedName = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("pff.growingJourney.v1")).name
