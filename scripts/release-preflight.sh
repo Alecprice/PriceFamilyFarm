@@ -47,6 +47,9 @@ bash scripts/compare-live-route-inventory.sh
 step "Read-only edge security audit"
 bash scripts/audit-edge-security.sh
 
+printf '\n=== Live security headers ===\n'
+bash scripts/verify-live-security.sh "$NEXT_PUBLIC_SITE_URL/"
+
 cat <<'EOF'
 
 === PREFLIGHT PASSED ===

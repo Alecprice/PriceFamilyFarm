@@ -1,0 +1,173 @@
+.hero {
+  padding: clamp(2rem, 6vw, 5.5rem) 1rem 2rem;
+  background: linear-gradient(135deg, #f6f1e4, #e7efdc);
+}
+.heroInner, .content {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+.kicker {
+  text-transform: uppercase;
+  letter-spacing: .13em;
+  font-size: .82rem;
+  font-weight: 800;
+  color: #5b6e47;
+}
+.hero h1 {
+  font-size: clamp(2.1rem, 7vw, 4.8rem);
+  line-height: .98;
+  margin: .4rem 0 1rem;
+}
+.hero p {
+  font-size: clamp(1rem, 2vw, 1.22rem);
+  line-height: 1.7;
+  max-width: 850px;
+}
+.content {
+  padding: 2rem 1rem 5rem;
+}
+.notice, .warning, .netNote {
+  border-left: 5px solid #a86f28;
+  background: #fff7e8;
+  padding: 1rem 1.15rem;
+  border-radius: 10px;
+}
+.netNote {
+  border-left-color: #4d7f91;
+  background: #edf7fa;
+}
+.sectionTitle {
+  margin-top: 3rem;
+  font-size: clamp(1.6rem, 4vw, 2.5rem);
+}
+.cards, .cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr));
+  gap: 1rem;
+}
+.navCard, .detailCard {
+  border: 1px solid #d7d8ce;
+  border-radius: 16px;
+  padding: 1.25rem;
+  background: #fff;
+  box-shadow: 0 6px 24px rgba(46, 55, 36, .06);
+}
+.navCard h2, .detailCard h2 { margin-top: .2rem; }
+.navCard a {
+  font-weight: 800;
+  text-decoration: none;
+}
+.library { margin-top: 1.5rem; }
+.controls {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(180px, .8fr);
+  gap: .8rem;
+  padding: .9rem;
+  margin-bottom: 1rem;
+  border: 1px solid #d9dfd1;
+  border-radius: 14px;
+  background: rgba(250, 249, 243, .96);
+  backdrop-filter: blur(8px);
+}
+.controls label { display: grid; gap: .35rem; font-weight: 700; }
+.controls input, .controls select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid #aeb7a7;
+  border-radius: 9px;
+  padding: .7rem .8rem;
+  font: inherit;
+  background: white;
+}
+.resultCount { color: #596150; font-weight: 700; }
+.detailCard {
+  scroll-margin-top: 90px;
+}
+.detailCard p, .detailCard li { line-height: 1.6; }
+.lead { font-size: 1.05rem; }
+.badges { display: flex; gap: .4rem; flex-wrap: wrap; }
+.badges span {
+  display: inline-flex;
+  padding: .28rem .55rem;
+  border-radius: 999px;
+  background: #e7efdc;
+  color: #425337;
+  font-size: .78rem;
+  font-weight: 800;
+}
+.listBlock { margin: 1rem 0; }
+.listBlock ul, .listBlock ol { padding-left: 1.25rem; }
+.learnSources {
+  margin-top: 1.25rem;
+  padding-top: .85rem;
+  border-top: 1px dashed #c7ccbe;
+  font-size: .88rem;
+}
+.learnSources ul { padding-left: 1.1rem; margin-bottom: 0; }
+.learnSources a { overflow-wrap: anywhere; }
+.diagram {
+  margin: 1.3rem 0;
+  padding: 1rem;
+  border-radius: 16px;
+  border: 1px solid #d7d8ce;
+  background: white;
+}
+.diagram svg { display: block; width: 100%; height: auto; }
+.diagram figcaption { margin-top: .7rem; color: #555f50; line-height: 1.5; }
+.ladder { display: grid; gap: .55rem; }
+.ladder > div {
+  display: grid;
+  grid-template-columns: 38px 100px 1fr;
+  gap: .7rem;
+  align-items: center;
+  padding: .65rem;
+  background: #eef3e8;
+  border-radius: 10px;
+}
+.ladder span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #5d794f;
+  color: white;
+  font-weight: 800;
+}
+.ladder p { margin: 0; }
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.checklist {
+  columns: 2 320px;
+  column-gap: 2rem;
+}
+.checklist li { break-inside: avoid; margin-bottom: .55rem; }
+@media (max-width: 720px) {
+  .controls { position: static; grid-template-columns: 1fr; }
+  .split { grid-template-columns: 1fr; }
+  .ladder > div { grid-template-columns: 36px 1fr; }
+  .ladder > div p { grid-column: 2; }
+}
+/* v5 mobile/readability polish */
+.navCard, .detailCard, .content, .heroInner { min-width: 0; }
+.navCard, .detailCard { overflow-wrap: anywhere; }
+.controls input, .controls select { min-height: 48px; }
+.detailCard a, .notice a, .warning a { overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+  .hero { padding: 1.65rem .85rem 1.5rem; }
+  .hero h1 { line-height: 1.03; font-size: clamp(2rem, 11vw, 3rem); }
+  .content { padding: 1.35rem .85rem 4rem; }
+  .navCard, .detailCard { padding: 1rem; border-radius: 14px; }
+  .notice, .warning, .netNote { padding: .85rem .9rem; }
+  .sectionTitle { margin-top: 2.25rem; }
+  .checklist { columns: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .library * { scroll-behavior: auto !important; }
+}
