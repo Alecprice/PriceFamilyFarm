@@ -41,29 +41,24 @@ test("Growing Journey rejects oversized and malformed imports without replacing 
 
   const fileInput = page.locator('input[type="file"][accept*="application/json"]');
 
-  let oversizedMessage = "";
-  page.once("dialog", async (dialog) => {
-    oversizedMessage = dialog.message();
-    await dialog.dismiss();
-  });
-
-  await fileInput.setInputFiles({
+  const oversizedDialogPromise = page.waitForEvent("dialog");
+  const oversizedUploadPromise = fileInput.setInputFiles({
     name: "oversized-growing-journey.json",
     mimeType: "application/json",
     buffer: Buffer.alloc(750_001, 32),
   });
 
+  const oversizedDialog = await oversizedDialogPromise;
+  const oversizedMessage = oversizedDialog.message();
+  await oversizedDialog.dismiss();
+  await oversizedUploadPromise;
+
   expect(oversizedMessage).toContain(
     "larger than the allowed local safety limit"
   );
 
-  let malformedMessage = "";
-  page.once("dialog", async (dialog) => {
-    malformedMessage = dialog.message();
-    await dialog.dismiss();
-  });
-
-  await fileInput.setInputFiles({
+  const malformedDialogPromise = page.waitForEvent("dialog");
+  const malformedUploadPromise = fileInput.setInputFiles({
     name: "malformed-growing-journey.json",
     mimeType: "application/json",
     buffer: Buffer.from(
@@ -79,6 +74,11 @@ test("Growing Journey rejects oversized and malformed imports without replacing 
       })
     ),
   });
+
+  const malformedDialog = await malformedDialogPromise;
+  const malformedMessage = malformedDialog.message();
+  await malformedDialog.dismiss();
+  await malformedUploadPromise;
 
   expect(malformedMessage).toContain(
     "custom tasks are malformed"
