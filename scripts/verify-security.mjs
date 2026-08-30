@@ -130,6 +130,28 @@ expect(
 
 expect(!fs.existsSync(path.join(root, ".env")), ".env is not committed");
 expect(!fs.existsSync(path.join(root, ".env.local")), ".env.local is not committed");
+const cloudFrontApply = read("scripts/apply-cloudfront-security.sh");
+expect(
+  cloudFrontApply.includes("67f7725c-6f97-4210-82d7-5512b31e9d03"),
+  "CloudFront apply script uses AWS managed SecurityHeadersPolicy"
+);
+expect(
+  cloudFrontApply.includes("deploy/cloudfront-security-headers-function.js"),
+  "CloudFront apply script manages the viewer-response security function"
+);
+expect(
+  cloudFrontApply.includes("publish-function"),
+  "CloudFront apply script publishes the validated security function"
+);
+expect(
+  !cloudFrontApply.includes("create-response-headers-policy"),
+  "CloudFront apply script does not create Free-plan-incompatible custom response policies"
+);
+expect(
+  !cloudFrontApply.includes("update-response-headers-policy"),
+  "CloudFront apply script does not update Free-plan-incompatible custom response policies"
+);
+
 expect(fs.existsSync(path.join(root, "public/.well-known/security.txt")), "security.txt is published");
 
 if (failures.length) {
