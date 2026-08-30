@@ -28,6 +28,7 @@ export default function robots() {
         "/funding",
         "/privacy-tools",
         "/farm-backup",
+        "/my-growing-journey",
       ],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,

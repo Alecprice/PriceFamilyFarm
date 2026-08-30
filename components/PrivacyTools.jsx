@@ -22,6 +22,18 @@ const LOCAL_DATA = [
     detail: "Crop plans, varieties, working spaces, dates, statuses, and planning notes.",
   },
   {
+    key: "pff.growingJourney.v1",
+    id: "growing-journey",
+    label: "My Growing Journey",
+    detail: "Private crop timelines, saved beds, custom tasks, completion state, notes, and task date adjustments.",
+  },
+  {
+    key: "pff.growingJourney.backups.v1",
+    id: "growing-journey-backups",
+    label: "Growing Journey recovery snapshots",
+    detail: "Up to five browser-local recovery snapshots maintained by My Growing Journey.",
+  },
+  {
     key: "price-family-farm-plantings-v1",
     id: "plantings",
     label: "Plantings & successions",

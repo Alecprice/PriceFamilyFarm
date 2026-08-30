@@ -12,7 +12,19 @@ required_paths=(
   "app/farm-calendar/page.js"
   "app/timeline/page.js"
   "app/search/page.js"
+  "app/crops/[slug]/page.js"
+  "app/learn/page.js"
+  "app/learn/bugs/page.js"
+  "app/learn/garden-planning/page.js"
+  "app/learn/permaculture/page.js"
+  "app/learn/plant-diseases/page.js"
+  "app/learn/year-round/page.js"
+  "app/my-growing-journey/page.js"
+  "components/learn/LearnLibrary.module.css"
+  "components/planner/GrowingJourney.jsx"
   "lib/farmData.js"
+  "lib/learn/bugData.js"
+  "lib/planner/journeyEngine.js"
 )
 
 missing=0

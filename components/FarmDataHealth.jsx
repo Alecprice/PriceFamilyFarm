@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { isValidBackupCollection, isValidPlanShape } from "@/lib/planner/plannerStorage";
 
 const SCHEMA_VERSION = 1;
 const SCHEMA_META_KEY = "price-family-farm-schema-meta-v1";
@@ -14,6 +15,8 @@ const STORES = [
   { id: "records", key: "price-family-farm-records-v2", label: "Farm records", max: 2_000_000, kind: "records" },
   { id: "funding", key: "price-family-farm-funding-v1", label: "Funding & education", max: 500_000, kind: "array" },
   { id: "planner", key: "price-family-farm-planner-v1", label: "Farm planner", max: 1_000_000, kind: "array" },
+  { id: "journey", key: "pff.growingJourney.v1", label: "My Growing Journey", max: 750_000, kind: "journey" },
+  { id: "journey-backups", key: "pff.growingJourney.backups.v1", label: "Growing Journey recovery snapshots", max: 4_000_000, kind: "journey-backups" },
   { id: "calendar", key: "price-family-farm-calendar-v1", label: "Farm calendar", max: 1_000_000, kind: "array" },
   { id: "journal", key: "price-family-farm-journal-v1", label: "Farm journal", max: 1_000_000, kind: "array" },
   { id: "garden", key: "price-family-farm-garden-layout-v1", label: "Garden layout", max: 500_000, kind: "array" },
@@ -25,6 +28,14 @@ const STORES = [
 
 function safeObject(value) {
   return value && typeof value === "object" && !Array.isArray(value);
+}
+
+function validJourneyPlan(value) {
+  return isValidPlanShape(value);
+}
+
+function validJourneyBackups(value) {
+  return isValidBackupCollection(value);
 }
 
 function parseMeta(key) {
@@ -59,19 +70,54 @@ function inspectStore(store) {
   const raw = localStorage.getItem(store.key);
   if (!raw) return { ...store, state: "empty", bytes: 0, count: 0, duplicates: 0, missing: 0, value: null };
   if (raw.length > store.max) return { ...store, state: "oversized", bytes: raw.length, count: 0, duplicates: 0, missing: 0, value: null };
+
   try {
     const parsed = JSON.parse(raw);
+
+    if (store.kind === "journey") {
+      if (!validJourneyPlan(parsed)) {
+        return { ...store, state: "wrong-shape", bytes: raw.length, count: 0, duplicates: 0, missing: 0, value: null };
+      }
+      const count = parsed.crops.length + parsed.beds.length + parsed.customTasks.length;
+      return { ...store, state: "valid", bytes: raw.length, count, duplicates: 0, missing: 0, value: parsed };
+    }
+
+    if (store.kind === "journey-backups") {
+      if (!validJourneyBackups(parsed)) {
+        return { ...store, state: "wrong-shape", bytes: raw.length, count: 0, duplicates: 0, missing: 0, value: null };
+      }
+      return { ...store, state: "valid", bytes: raw.length, count: parsed.length, duplicates: 0, missing: 0, value: parsed };
+    }
+
     if (store.kind === "array") {
-      if (!Array.isArray(parsed)) return { ...store, state: "wrong-shape", bytes: raw.length, count: 0, duplicates: 0, missing: 0, value: null };
+      if (!Array.isArray(parsed)) {
+        return { ...store, state: "wrong-shape", bytes: raw.length, count: 0, duplicates: 0, missing: 0, value: null };
+      }
       const ids = analyzeIds(parsed);
       return { ...store, state: "valid", bytes: raw.length, count: parsed.length, ...ids, value: parsed };
     }
+
     if (!safeObject(parsed) || !Array.isArray(parsed.harvests) || !Array.isArray(parsed.experiments) || !Array.isArray(parsed.expenses)) {
       return { ...store, state: "wrong-shape", bytes: raw.length, count: 0, duplicates: 0, missing: 0, value: null };
     }
+
     const collections = [parsed.harvests, parsed.experiments, parsed.expenses];
-    const ids = collections.map(analyzeIds).reduce((sum, item) => ({ duplicates: sum.duplicates + item.duplicates, missing: sum.missing + item.missing }), { duplicates: 0, missing: 0 });
-    return { ...store, state: "valid", bytes: raw.length, count: collections.reduce((sum, items) => sum + items.length, 0), ...ids, value: parsed };
+    const ids = collections.map(analyzeIds).reduce(
+      (sum, item) => ({
+        duplicates: sum.duplicates + item.duplicates,
+        missing: sum.missing + item.missing,
+      }),
+      { duplicates: 0, missing: 0 }
+    );
+
+    return {
+      ...store,
+      state: "valid",
+      bytes: raw.length,
+      count: collections.reduce((sum, items) => sum + items.length, 0),
+      ...ids,
+      value: parsed,
+    };
   } catch {
     return { ...store, state: "malformed", bytes: raw.length, count: 0, duplicates: 0, missing: 0, value: null };
   }
@@ -110,6 +156,9 @@ function normalizeIds(items, storeId, group) {
 
 function prepareRepair(store) {
   if (store.state !== "valid") return { changed: false, repairs: 0, value: store.value };
+  if (store.kind === "journey" || store.kind === "journey-backups") {
+    return { changed: false, repairs: 0, value: store.value };
+  }
   if (store.kind === "array") {
     const result = normalizeIds(store.value, store.id, "items");
     return { changed: result.repairs > 0, repairs: result.repairs, value: result.next };

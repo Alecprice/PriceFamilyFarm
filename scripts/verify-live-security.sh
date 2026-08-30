@@ -19,7 +19,7 @@ fail() { printf 'FAIL: %s\n' "$1" >&2; failures=$((failures + 1)); }
 
 header_value() {
   local name="$1"
-  printf '%s\n' "$final_headers" | awk -v IGNORECASE=1 -v h="$name" 'BEGIN{FS=":"} tolower($1)==tolower(h){sub(/^[^:]+:[[:space:]]*/, ""); print; exit}'
+  printf '%s\n' "$final_headers" | awk -v h="$name" 'BEGIN{FS=":"} tolower($1)==tolower(h){sub(/^[^:]+:[[:space:]]*/, ""); sub(/\r$/, ""); print; exit}'
 }
 
 printf '=== LIVE SECURITY HEADERS ===\n'
@@ -41,10 +41,10 @@ csp="$(header_value content-security-policy)"
   || fail "Content-Security-Policy is missing or incomplete"
 
 xfo="$(header_value x-frame-options)"
-[[ "${xfo^^}" == "DENY" ]] && pass "X-Frame-Options is DENY" || fail "X-Frame-Options is not DENY"
+[[ "$(printf '%s' "$xfo" | tr '[:lower:]' '[:upper:]')" == "DENY" ]] && pass "X-Frame-Options is DENY" || fail "X-Frame-Options is not DENY"
 
 xcto="$(header_value x-content-type-options)"
-[[ "${xcto,,}" == "nosniff" ]] && pass "X-Content-Type-Options is nosniff" || fail "X-Content-Type-Options is not nosniff"
+[[ "$(printf '%s' "$xcto" | tr '[:upper:]' '[:lower:]')" == "nosniff" ]] && pass "X-Content-Type-Options is nosniff" || fail "X-Content-Type-Options is not nosniff"
 
 referrer="$(header_value referrer-policy)"
 [[ "$referrer" == "strict-origin-when-cross-origin" ]] && pass "Referrer-Policy is strict-origin-when-cross-origin" || fail "Referrer-Policy is missing or unexpected"
