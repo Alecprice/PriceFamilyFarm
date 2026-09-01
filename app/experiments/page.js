@@ -1,19 +1,18 @@
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import ExperimentsDashboard from "@/components/ExperimentsDashboard";
+import { EXPERIMENTS } from "@/lib/farmData";
 
 export const metadata = {
-  title: "Experiment Log · Price Family Farm",
-  description: "A private browser-local review of Price Family Farm experiments, controls, variables, status, and recorded results.",
-  robots: { index: false, follow: false },
+  title: "Farm Experiments · Price Family Farm",
+  description: "A structured experiment log for container growing, grafting, greenhouse conditions, growing media, and overwintering at Price Family Farm.",
 };
 
 export default function ExperimentsPage() {
   return (
     <>
       <Nav />
-      <header className="page-head"><div className="wrap"><span className="eyebrow on-dark">Farm OS · Experiment log</span><h1>Keep trials separate from guesses.</h1><p>Review planned, running, completed, and stopped farm experiments while keeping incomplete results visibly incomplete.</p></div></header>
-      <main><div className="wrap"><ExperimentsDashboard /></div></main>
+      <header className="page-head"><div className="wrap"><span className="eyebrow on-dark">Experiment Log</span><h1>Turn “I think that worked better” into a record.</h1><p>These are ready-to-use experiment templates. They are not presented as completed trials until real measurements are entered.</p></div></header>
+      <section><div className="wrap"><div className="experiment-grid">{EXPERIMENTS.map((experiment) => <article className="experiment-card" key={experiment.id}><div className="experiment-top"><span className="status-pill neutral">{experiment.status}</span><span className="experiment-id">{experiment.id}</span></div><h2>{experiment.title}</h2><p>{experiment.question}</p><h3>Record</h3><div className="tag-cloud">{experiment.measures.map((measure) => <span key={measure}>{measure}</span>)}</div></article>)}</div></div></section>
       <Footer />
     </>
   );

@@ -11,6 +11,8 @@ const NAV_ITEMS = [
     children: [
       { href: "/farm-os", label: "Farm OS" },
       { href: "/what-we-grow", label: "What We Grow" },
+      { href: "/harvest", label: "2026 Season Tracker" },
+      { href: "/experiments", label: "Experiment Log" },
       { href: "/available", label: "Availability" },
       { href: "/farm-records", label: "Farm Records" },
       { href: "/farm-analytics", label: "Farm Analytics" },
@@ -31,7 +33,7 @@ const NAV_ITEMS = [
       { href: "/market-planner", label: "Market Planner" },
       { href: "/weekly-work-sheet", label: "Weekly Work Sheet" },
       { href: "/learn/garden-layout-builder", label: "Garden Layout Builder" },
-      { href: "/farm-map", label: "Schematic Farm Map" },
+      { href: "/farm-map", label: "Farm Map" },
       { href: "/growing-guide", label: "Growing Guide" },
       { href: "/weather", label: "Growing Conditions" },
       { href: "/propagation", label: "Propagation & Grafting" },
@@ -66,10 +68,13 @@ export default function Nav() {
     }
     function onKey(event) {
       if (event.key === "Escape") {
-        const shouldReturnFocus = navRef.current?.contains(document.activeElement);
+        const mobileMenuWasOpen =
+          open && window.matchMedia("(max-width: 780px)").matches;
         setOpenMenu("");
         setOpen(false);
-        if (shouldReturnFocus) window.requestAnimationFrame(() => toggleRef.current?.focus());
+        if (mobileMenuWasOpen) {
+          window.requestAnimationFrame(() => toggleRef.current?.focus());
+        }
       }
     }
     document.addEventListener("pointerdown", onDocumentPointer);
@@ -78,7 +83,7 @@ export default function Nav() {
       document.removeEventListener("pointerdown", onDocumentPointer);
       document.removeEventListener("keydown", onKey);
     };
-  }, []);
+  }, [open]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 780px)");

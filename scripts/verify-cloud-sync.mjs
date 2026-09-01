@@ -1,0 +1,57 @@
+import fs from "node:fs";
+
+let failures = 0;
+let checks = 0;
+
+function expect(condition, label) {
+  checks += 1;
+  if (!condition) {
+    failures += 1;
+    console.error(`FAIL: ${label}`);
+  }
+}
+
+function read(path) {
+  return fs.readFileSync(path, "utf8");
+}
+
+const page = read("app/farm-os/cloud-sync/page.js");
+const component = read("components/FarmCloudSync.jsx");
+const client = read("lib/farmCloudSync.js");
+const registry = read("lib/farmStoreRegistry.js");
+const backup = read("components/FarmLocalBackup.jsx");
+const worker = read("workers/farm-sync/src/index.js");
+const workerConfig = read("workers/farm-sync/wrangler.toml");
+const sitemap = read("app/sitemap.js");
+
+const migration = read("workers/farm-sync/migrations/001_initial_cloud_sync.sql");
+expect(migration.includes("CREATE TABLE IF NOT EXISTS public.farm_documents"), "versioned migration creates Farm OS cloud documents");
+expect(migration.includes("CREATE TABLE IF NOT EXISTS public.farm_document_versions"), "versioned migration preserves document history");
+expect(migration.includes("CREATE TABLE IF NOT EXISTS public.farm_sync_events"), "versioned migration creates sync audit events");
+expect(migration.includes("CREATE OR REPLACE FUNCTION public.pff_put_document"), "versioned migration defines revision-aware document writes");
+expect(migration.includes("small-water-25690282"), "versioned migration records the dedicated Price Family Farm Neon project identity");
+expect(!migration.includes("postgresql://") && !migration.includes("postgres://"), "versioned migration contains no database credential URI");
+
+expect(page.includes("index: false"), "Cloud Sync page is noindex");
+expect(!sitemap.includes('"/farm-os/cloud-sync"'), "Cloud Sync page is excluded from the public sitemap");
+expect(component.includes('type="password"'), "Cloud Sync token control is password-masked");
+expect(client.includes("sessionStorage"), "sync token uses session storage");
+expect(!client.includes("localStorage.setItem(TOKEN_KEY"), "sync token is never persisted in local storage");
+expect(client.includes("PRE_PULL_KEY"), "cloud pull preserves a pre-pull local recovery snapshot");
+expect(client.includes("expectedRevision"), "client sends optimistic revision guards");
+expect(client.includes("validFarmStoreValue"), "cloud restores validate store payloads");
+expect(registry.includes("pff.growingJourney.v1"), "shared allowlist includes Growing Journey");
+expect(backup.includes("FARM_STORES"), "local backup uses the shared store allowlist");
+expect(worker.includes("env.DATABASE_URL"), "Worker keeps Neon connection in server environment");
+expect(worker.includes("PFF_SYNC_TOKEN"), "Worker requires a private sync token");
+expect(worker.includes("pff_put_document"), "Worker uses revision-aware Neon write function");
+expect(worker.includes("ALLOWED_DOCUMENT_KEYS"), "Worker enforces the Farm OS server-side document allowlist");
+expect(workerConfig.includes("PFF_ALLOWED_ORIGIN"), "Worker declares restricted production origin");
+expect(!worker.includes("NEXT_PUBLIC_DATABASE_URL"), "Worker does not expose a public database variable");
+
+if (failures) {
+  console.error(`Cloud Sync verification failed: ${failures}/${checks} checks failed.`);
+  process.exit(1);
+}
+
+console.log(`Cloud Sync verification passed: ${checks} checks.`);

@@ -12,7 +12,7 @@ test("experiments dashboard preserves incomplete results and filters local trial
     }));
   });
 
-  await page.goto("/experiments/");
+  await page.goto("/farm-os/experiments/");
   await expect(page.getByRole("heading", { name: "Keep trials separate from guesses.", exact: true })).toBeVisible();
   await expect(page.getByText("Result not recorded yet.", { exact: false })).toBeVisible();
   await page.getByLabel("Status").selectOption("running");

@@ -133,6 +133,67 @@ export default function Documentation() {
         </div>
       </section>
 
+
+      <section className="bg-cream bg-line-top">
+        <div className="wrap">
+          <div className="section-head">
+            <span className="eyebrow">Official records &amp; training</span>
+            <h2>The documents behind the milestones.</h2>
+            <p>
+              Original records supporting the farm registration and
+              completed farm-management training are preserved here with
+              the public farm record.
+            </p>
+          </div>
+
+          <div className="grid-2">
+            <article className="packet">
+              <img
+                src="/images/documents/farm-name-registration.webp"
+                alt="Tennessee family farm name registration for Price Family Farm"
+                loading="lazy"
+                style={{ width: "100%", height: "auto", borderRadius: 12 }}
+              />
+              <h3>Price Family Farm registration</h3>
+              <p>
+                Tennessee Department of Agriculture family farm name
+                registration for Greene County, dated June 16, 2026.
+              </p>
+              <a
+                className="stat-link"
+                href="/documents/price-family-farm-registration.pdf"
+                target="_blank"
+                rel="noreferrer"
+              >
+                View original registration PDF →
+              </a>
+            </article>
+
+            <article className="packet">
+              <img
+                src="/images/documents/master-farm-manager.webp"
+                alt="University of Tennessee Master Farm Manager Program completion certificate"
+                loading="lazy"
+                style={{ width: "100%", height: "auto", borderRadius: 12 }}
+              />
+              <h3>Master Farm Manager Program</h3>
+              <p>
+                University of Tennessee Institute of Agriculture Master
+                Farm Manager Program completion, July 31, 2026.
+              </p>
+              <a
+                className="stat-link"
+                href="/documents/alec-price-master-farm-manager.pdf"
+                target="_blank"
+                rel="noreferrer"
+              >
+                View original training certificate PDF →
+              </a>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <Footer />
     </>
   );

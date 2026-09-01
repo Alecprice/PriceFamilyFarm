@@ -59,7 +59,7 @@ function buildEvents() {
     if (!eventDate || !title) continue;
     const status = text(item?.status, 30);
     const result = text(item?.result, 500);
-    events.push({ id: `experiment-${text(item?.id, 120)}-${eventDate}-${events.length}`, date: eventDate, type: "Experiment", title, detail: [text(item?.crop, 80), status].filter(Boolean).join(" · "), note: result || text(item?.question, 500), href: "/experiments" });
+    events.push({ id: `experiment-${text(item?.id, 120)}-${eventDate}-${events.length}`, date: eventDate, type: "Experiment", title, detail: [text(item?.crop, 80), status].filter(Boolean).join(" · "), note: result || text(item?.question, 500), href: "/farm-os/experiments" });
   }
 
   for (const item of Array.isArray(records?.expenses) ? records.expenses.slice(0, 5_000) : []) {
@@ -73,14 +73,14 @@ function buildEvents() {
     const eventDate = date(item?.date);
     const title = text(item?.title, 160);
     if (!eventDate || !title) continue;
-    events.push({ id: `journal-${text(item?.id, 120)}-${eventDate}-${events.length}`, date: eventDate, type: "Journal", title, detail: text(item?.category, 50), note: text(item?.body, 800), href: "/farm-journal" });
+    events.push({ id: `journal-${text(item?.id, 120)}-${eventDate}-${events.length}`, date: eventDate, type: "Journal", title, detail: text(item?.category, 50), note: text(item?.body, 800), href: "/farm-os/journal" });
   }
 
   for (const item of Array.isArray(calendar) ? calendar.slice(0, 1_000) : []) {
     const eventDate = date(item?.date);
     const title = text(item?.task, 180);
     if (!eventDate || !title) continue;
-    events.push({ id: `task-${text(item?.id, 120)}-${eventDate}-${events.length}`, date: eventDate, type: "Task", title, detail: [text(item?.category, 50), text(item?.status, 40)].filter(Boolean).join(" · "), note: text(item?.notes, 600), href: "/farm-calendar" });
+    events.push({ id: `task-${text(item?.id, 120)}-${eventDate}-${events.length}`, date: eventDate, type: "Task", title, detail: [text(item?.category, 50), text(item?.status, 40)].filter(Boolean).join(" · "), note: text(item?.notes, 600), href: "/farm-os/calendar" });
   }
 
   return events.sort((a, b) => b.date.localeCompare(a.date) || a.type.localeCompare(b.type));

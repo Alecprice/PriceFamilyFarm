@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("farm map stores only schematic browser-local zone data", async ({ page }) => {
-  await page.goto("/farm-map/");
+  await page.goto("/farm-os/map/");
   await page.getByLabel("Zone name").fill("North garden beds");
   await page.getByLabel("Zone type").selectOption("Garden bed");
   await page.getByLabel("Area (ft², optional)").fill("240");

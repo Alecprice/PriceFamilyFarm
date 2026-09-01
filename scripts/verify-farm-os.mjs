@@ -43,6 +43,7 @@ const required = [
   "components/FundingEducationTracker.jsx",
   "components/WeatherPanel.jsx",
   "lib/contactConfig.js",
+  "lib/farmStoreRegistry.js",
 ];
 
 for (const file of required) expect(fs.existsSync(path.join(root, file)), `required file exists: ${file}`);
@@ -90,6 +91,7 @@ expect(dataHealth.includes("confirmation !== \"REPAIR\""), "data health requires
 expect(!dataHealth.includes("fetch("), "data health never uploads private stores");
 
 const backup = read("components/FarmLocalBackup.jsx");
+const storeRegistry = read("lib/farmStoreRegistry.js");
 for (const key of [
   "price-family-farm-inventory-v1",
   "price-family-farm-plantings-v1",
@@ -97,8 +99,20 @@ for (const key of [
   "pff.growingJourney.v1",
   "pff.growingJourney.backups.v1",
 ]) {
-  expect(backup.includes(key), `Farm OS backup allowlist includes ${key}`);
+  expect(storeRegistry.includes(key), `Farm OS shared backup/sync allowlist includes ${key}`);
 }
+expect(
+  backup.includes('from "@/lib/farmStoreRegistry"'),
+  "Farm OS backup imports the canonical shared backup/sync allowlist"
+);
+expect(
+  backup.includes("FARM_STORES"),
+  "Farm OS backup enumerates the canonical shared store registry"
+);
+expect(
+  backup.includes("validFarmStoreValue"),
+  "Farm OS backup uses canonical shared store validation"
+);
 expect(backup.includes("price-family-farm-pre-restore-snapshot-v1"), "Farm OS backup captures a pre-restore snapshot");
 
 const privacy = read("components/PrivacyTools.jsx");
@@ -112,7 +126,11 @@ expect(journeyStorage.includes("export function isValidPlanShape"), "Growing Jou
 expect(journeyStorage.includes("isValidCropRecord"), "Growing Journey validates imported crop records");
 expect(journeyStorage.includes("isValidTaskRecord"), "Growing Journey validates imported custom tasks");
 expect(journeyStorage.includes("raw.length>MAX_PLAN_BYTES") || journeyStorage.includes("raw.length > MAX_PLAN_BYTES"), "Growing Journey rejects oversized stored plans before parsing");
-expect(backup.includes("isValidPlanShape"), "Farm OS backup reuses canonical Growing Journey validation");
+expect(
+  storeRegistry.includes("isValidPlanShape") &&
+    storeRegistry.includes("isValidBackupCollection"),
+  "Farm OS shared registry reuses canonical Growing Journey validation"
+);
 expect(dataHealth.includes("isValidPlanShape"), "Data Health reuses canonical Growing Journey validation");
 
 const funding = read("components/FundingEducationTracker.jsx");

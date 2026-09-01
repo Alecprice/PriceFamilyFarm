@@ -160,7 +160,7 @@ export default function FarmWeeklyReview() {
         <h2 id="weekly-work-heading">Close the loop before next week.</h2>
         <div className="grid-3">
           <article className="packet"><h3>{review.doneDatedThisWeek.length} dated task{review.doneDatedThisWeek.length === 1 ? "" : "s"} marked done</h3><p>Tasks with a planned date between {review.start} and {review.current} that are currently marked Done.</p></article>
-          <article className="packet"><h3>{review.overdue.length} overdue open</h3><p>Open tasks dated before today that still need a decision, update, or completion.</p><Link className="stat-link" href="/farm-calendar">Open calendar →</Link></article>
+          <article className="packet"><h3>{review.overdue.length} overdue open</h3><p>Open tasks dated before today that still need a decision, update, or completion.</p><Link className="stat-link" href="/farm-os/calendar">Open calendar →</Link></article>
           <article className="packet"><h3>{review.upcoming.length} due through next 7 days</h3><p>Open tasks dated from today through {review.upcomingEnd}.</p><Link className="stat-link" href="/farm-today">Open Today →</Link></article>
         </div>
       </section>
@@ -181,7 +181,7 @@ export default function FarmWeeklyReview() {
         <span className="eyebrow">Next cycle</span>
         <h2 id="weekly-next-heading">Active crop plans.</h2>
         <p>{review.activePlans.length} active crop plan{review.activePlans.length === 1 ? " is" : "s are"} saved in this browser.</p>
-        <div className="farm-actions"><Link className="farm-action secondary" href="/farm-planner">Open Farm Planner</Link><Link className="farm-action secondary" href="/farm-today">Open Farm Today</Link></div>
+        <div className="farm-actions"><Link className="farm-action secondary" href="/farm-os/planner">Open Farm Planner</Link><Link className="farm-action secondary" href="/farm-today">Open Farm Today</Link></div>
       </section>
 
       <div className="farm-actions">

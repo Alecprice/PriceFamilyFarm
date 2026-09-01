@@ -11,7 +11,7 @@ test("season timeline combines private browser records without publishing them",
     localStorage.setItem("price-family-farm-calendar-v1", JSON.stringify([{ id: "c1", date: "2026-08-21", task: "Seed fall lettuce", category: "Planting", status: "Planned", notes: "Start in trays." }]));
   });
 
-  await page.goto("/timeline/");
+  await page.goto("/farm-os/timeline/");
   await expect(page.getByText("Seed fall lettuce", { exact: true })).toBeVisible();
   await expect(page.getByText("Cherokee Purple", { exact: false })).toBeVisible();
   await expect(page.getByText("Customers asked for more slicing tomatoes.", { exact: true })).toBeVisible();

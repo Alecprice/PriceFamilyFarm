@@ -20,7 +20,7 @@ test("primary navigation exposes recovered Farm OS planning tools", async ({ pag
   await expect(nav.getByRole("link", { name: "Farm Planner", exact: true })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Farm Calendar", exact: true })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Garden Layout Builder", exact: true })).toBeVisible();
-  await expect(nav.getByRole("link", { name: "Schematic Farm Map", exact: true })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Farm Map", exact: true })).toBeVisible();
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);

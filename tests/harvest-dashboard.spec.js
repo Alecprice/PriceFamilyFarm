@@ -13,7 +13,7 @@ test("harvest dashboard summarizes browser-local harvests without mixing units",
     }));
   });
 
-  await page.goto("/harvest/");
+  await page.goto("/farm-os/harvest/");
   await expect(page.getByRole("heading", { name: "See what the season is actually producing.", exact: true })).toBeVisible();
   await expect(page.getByText("$55.00", { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "11 lb", exact: true })).toBeVisible();

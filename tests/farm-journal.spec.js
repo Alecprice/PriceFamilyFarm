@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("farm journal persists browser-local entries and filters them", async ({ page }) => {
-  await page.goto("/farm-journal/");
+  await page.goto("/farm-os/journal/");
   await page.getByLabel("Title", { exact: true }).fill("Irrigation repair");
   await page.getByLabel("Category", { exact: true }).selectOption("Maintenance");
   await page.getByLabel("Observation / note", { exact: true }).fill("Replaced a leaking fitting and checked the line.");

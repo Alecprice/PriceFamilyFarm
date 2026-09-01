@@ -179,7 +179,7 @@ export default function FarmTodayActions() {
         </div>
       </div>
 
-      <div className="farm-actions"><Link className="farm-action secondary" href="/farm-calendar">Open full Calendar</Link><Link className="farm-action secondary" href="/farm-planner">Open full Planner</Link></div>
+      <div className="farm-actions"><Link className="farm-action secondary" href="/farm-os/calendar">Open full Calendar</Link><Link className="farm-action secondary" href="/farm-os/planner">Open full Planner</Link></div>
     </section>
   );
 }

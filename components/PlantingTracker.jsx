@@ -200,6 +200,11 @@ export default function PlantingTracker() {
         <span className="eyebrow">Production plan</span>
         <h2 id="planting-add-heading">Add a planting or succession.</h2>
         <form className="farm-form" onSubmit={addPlanting}>
+          <fieldset
+            disabled={!ready}
+            aria-busy={!ready}
+            style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
+          >
           <div className="farm-form-grid">
             <div className="farm-field"><label htmlFor="planting-crop">Crop</label><input id="planting-crop" name="crop" maxLength={80} required /></div>
             <div className="farm-field"><label htmlFor="planting-variety">Variety</label><input id="planting-variety" name="variety" maxLength={100} /></div>
@@ -214,7 +219,8 @@ export default function PlantingTracker() {
             <div className="farm-field"><label htmlFor="planting-succession">Next succession date</label><input id="planting-succession" name="nextSuccessionDate" type="date" /></div>
           </div>
           <div className="farm-field"><label htmlFor="planting-notes">Notes</label><textarea id="planting-notes" name="notes" maxLength={600} rows={3} /></div>
-          <div className="farm-actions"><button className="farm-action" type="submit">Save planting</button></div>
+          <div className="farm-actions"><button className="farm-action" type="submit">{ready ? "Save planting" : "Loading planting data…"}</button></div>
+          </fieldset>
         </form>
       </section>
 
@@ -242,7 +248,7 @@ export default function PlantingTracker() {
         })}</div> : <div className="farm-empty">No plantings are saved in this browser yet.</div>}
       </section>
 
-      <div className="farm-actions"><Link className="farm-action secondary" href="/learn/garden-layout-builder">Open Garden Layout</Link><Link className="farm-action secondary" href="/farm-records">Open Farm Records</Link><Link className="farm-action secondary" href="/farm-planner">Open Farm Planner</Link></div>
+      <div className="farm-actions"><Link className="farm-action secondary" href="/learn/garden-layout-builder">Open Garden Layout</Link><Link className="farm-action secondary" href="/farm-records">Open Farm Records</Link><Link className="farm-action secondary" href="/farm-os/planner">Open Farm Planner</Link></div>
     </div>
   );
 }
