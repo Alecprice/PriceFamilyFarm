@@ -102,7 +102,7 @@ const revisionCheckpoint = client.indexOf("writeRevisionMap(revisions)", revisio
 const uploadIncrement = client.indexOf("result.uploaded += 1", revisionAssignment);
 expect(nextRevisionCheck >= 0 && revisionAssignment > nextRevisionCheck, "successful cloud pushes validate the returned server revision before recording it");
 expect(revisionCheckpoint > revisionAssignment && revisionCheckpoint < uploadIncrement, "successful cloud pushes checkpoint each validated server revision before continuing");
-const partialFailureIndex = client.indexOf("partialUploadFailure(result, store, error)");
+const partialFailureIndex = client.indexOf("throw partialUploadFailure(result, store, error)", uploadIncrement);
 expect(partialFailureIndex > uploadIncrement, "later upload failures preserve already-checkpointed progress instead of erasing it from the result path");
 expect(client.includes("validFarmStoreValue"), "cloud restores validate store payloads");
 expect(registry.includes("pff.growingJourney.v1"), "shared allowlist includes Growing Journey");
