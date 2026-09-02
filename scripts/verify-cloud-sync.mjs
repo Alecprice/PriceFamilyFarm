@@ -63,7 +63,15 @@ expect(client.includes("new AbortController()"), "Cloud Sync request timeout use
 expect(client.includes('throw new Error("request_timeout")'), "Cloud Sync maps aborted requests to a stable timeout error");
 expect(component.includes("timed out after 30 seconds"), "Cloud Sync UI explains request timeouts and in-flight uncertainty");
 expect(client.includes("partial_upload:"), "Cloud Sync preserves structured partial-upload progress when later requests fail");
+expect(client.includes("alreadyCurrent: result.alreadyCurrent"), "partial-upload progress includes already-matching reconciled copies");
 expect(component.includes("Completed revision checkpoints were preserved"), "Cloud Sync UI explains that completed partial-upload checkpoints remain durable");
+expect(component.includes("already-matching cloud"), "Cloud Sync UI explains verified idempotent retry reconciliation");
+expect(client.includes("serverChecksum === requestBody.checksum"), "retry reconciliation requires the cloud checksum to match the browser request checksum");
+expect(client.includes("serverChecksum === serverPayloadChecksum"), "retry reconciliation independently verifies the returned cloud payload checksum");
+const conflictRevisionAdoption = client.indexOf("revisions[store.id] = serverRevision");
+const conflictRevisionCheckpoint = client.indexOf("writeRevisionMap(revisions)", conflictRevisionAdoption);
+const alreadyCurrentIncrement = client.indexOf("result.alreadyCurrent += 1", conflictRevisionCheckpoint);
+expect(conflictRevisionAdoption >= 0 && conflictRevisionCheckpoint > conflictRevisionAdoption && alreadyCurrentIncrement > conflictRevisionCheckpoint, "identical retry conflicts checkpoint the verified server revision before reporting reconciliation");
 expect(component.includes("Production builds only send that token to the configured Farm OS sync origin"), "Cloud Sync UI explains the production token destination lock");
 expect(component.includes("This development field accepts loopback origins only"), "unconfigured builds explain their loopback-only development boundary");
 expect(component.includes("cloud schema is not ready at the required version"), "Cloud Sync UI explains a blocked stale or incomplete database schema");
