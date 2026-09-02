@@ -93,6 +93,20 @@ function schemaReady(schema) {
   );
 }
 
+async function readSchema(sql) {
+  const rows = await sql`
+    SELECT value
+    FROM pff_meta
+    WHERE key = 'schema'
+    LIMIT 1
+  `;
+  return rows[0]?.value ?? null;
+}
+
+function schemaNotReady(env, schema) {
+  return json(env, { ok: false, error: "schema_not_ready", schema }, 503);
+}
+
 async function readBoundedBody(request) {
   const lengthHeader = request.headers.get("Content-Length");
   const declaredLength = lengthHeader == null ? null : Number(lengthHeader);
@@ -169,24 +183,15 @@ const worker = {
 
     try {
       if (request.method === "GET" && url.pathname === "/health") {
-        const rows = await sql`
-          SELECT value
-          FROM pff_meta
-          WHERE key = 'schema'
-          LIMIT 1
-        `;
-        const schema = rows[0]?.value ?? null;
-        if (!schemaReady(schema)) {
-          return json(
-            env,
-            { ok: false, error: "schema_not_ready", schema },
-            503,
-          );
-        }
+        const schema = await readSchema(sql);
+        if (!schemaReady(schema)) return schemaNotReady(env, schema);
         return json(env, { ok: true, schema });
       }
 
       if (request.method === "GET" && url.pathname === "/v1/documents") {
+        const schema = await readSchema(sql);
+        if (!schemaReady(schema)) return schemaNotReady(env, schema);
+
         const farmId = await currentFarmId(sql);
         const rows = await sql`
           SELECT
@@ -215,6 +220,9 @@ const worker = {
       if (!KEY_PATTERN.test(key) || !ALLOWED_DOCUMENT_KEYS.has(key)) {
         return json(env, { error: "invalid_document_key" }, 400);
       }
+
+      const schema = await readSchema(sql);
+      if (!schemaReady(schema)) return schemaNotReady(env, schema);
 
       if (request.method === "GET") {
         const farmId = await currentFarmId(sql);
