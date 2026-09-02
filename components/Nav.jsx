@@ -70,11 +70,11 @@ export default function Nav() {
       if (event.key === "Escape") {
         const mobileMenuWasOpen =
           open && window.matchMedia("(max-width: 780px)").matches;
+        if (mobileMenuWasOpen) {
+          toggleRef.current?.focus();
+        }
         setOpenMenu("");
         setOpen(false);
-        if (mobileMenuWasOpen) {
-          window.requestAnimationFrame(() => toggleRef.current?.focus());
-        }
       }
     }
     document.addEventListener("pointerdown", onDocumentPointer);
