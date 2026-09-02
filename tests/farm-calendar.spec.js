@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("farm calendar persists tasks and updates status locally", async ({ page }) => {
-  await page.goto("/farm-calendar/");
+  await page.goto("/farm-os/calendar/");
   await page.getByRole("textbox", { name: "Task", exact: true }).fill("Transplant fall lettuce");
   await page.getByLabel("Category", { exact: true }).selectOption("Planting");
   await page.getByLabel("Notes", { exact: true }).fill("Harden starts before moving outside.");

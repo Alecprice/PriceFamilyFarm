@@ -25,6 +25,54 @@ export default function FarmOsPage() {
         <div className="wrap">
           <FarmOsDashboard />
           <FarmOsExpansionPanel />
+          <section className="farm-panel" aria-labelledby="farm-os-cloud-sync-heading">
+            <span className="eyebrow">Device continuity</span>
+            <h2 id="farm-os-cloud-sync-heading">Keep the private working set available across trusted devices.</h2>
+            <p>Farm OS can keep its browser-local workflow while using the dedicated Price Family Farm cloud sync service for revision-aware backup, device restore, and conflict-safe transfers.</p>
+            <div className="farm-actions">
+              <Link className="farm-action" href="/farm-os/cloud-sync">Open Cloud Sync</Link>
+              <Link className="farm-action secondary" href="/farm-backup">Open Local Backup</Link>
+            </div>
+          </section>
+
+          <section
+            className="farm-panel"
+            aria-labelledby="farm-os-private-tools-heading"
+          >
+            <span className="eyebrow">Private operating tools</span>
+            <h2 id="farm-os-private-tools-heading">
+              Keep operating records separate from the public farm story.
+            </h2>
+            <p>
+              These browser-local tools stay under Farm OS so their URLs
+              cannot replace established public farm pages.
+            </p>
+
+            <div className="farm-actions">
+              <Link className="farm-action" href="/farm-os/harvest">
+                Harvest Dashboard
+              </Link>
+              <Link className="farm-action" href="/farm-os/experiments">
+                Experiment Dashboard
+              </Link>
+              <Link className="farm-action" href="/farm-os/journal">
+                Private Journal
+              </Link>
+              <Link className="farm-action" href="/farm-os/timeline">
+                Operating Timeline
+              </Link>
+              <Link className="farm-action" href="/farm-os/calendar">
+                Operating Calendar
+              </Link>
+              <Link className="farm-action" href="/farm-os/map">
+                Farm Zone Map
+              </Link>
+              <Link className="farm-action" href="/farm-os/planner">
+                Crop &amp; Bed Planner
+              </Link>
+            </div>
+          </section>
+
           <section className="farm-panel" aria-labelledby="farm-os-weekly-review-heading">
             <span className="eyebrow">Review rhythm</span>
             <h2 id="farm-os-weekly-review-heading">Close the week before planning the next one.</h2>

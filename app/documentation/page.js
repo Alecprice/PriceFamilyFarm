@@ -1,5 +1,8 @@
+import Image from "next/image";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import farmNameRegistration from "@/public/images/documents/farm-name-registration.webp";
+import masterFarmManager from "@/public/images/documents/master-farm-manager.webp";
 
 export const metadata = {
   title: "Documentation · Price Family Farm",
@@ -130,6 +133,66 @@ export default function Documentation() {
             own farm, check current forms and requirements with the TN Department of Agriculture and Department of
             Revenue directly.
           </p>
+        </div>
+      </section>
+
+      <section className="bg-cream bg-line-top">
+        <div className="wrap">
+          <div className="section-head">
+            <span className="eyebrow">Official records &amp; training</span>
+            <h2>The documents behind the milestones.</h2>
+            <p>
+              Original records supporting the farm registration and
+              completed farm-management training are preserved here with
+              the public farm record.
+            </p>
+          </div>
+
+          <div className="grid-2">
+            <article className="packet">
+              <Image
+                src={farmNameRegistration}
+                alt="Tennessee family farm name registration for Price Family Farm"
+                sizes="(max-width: 760px) 100vw, 50vw"
+                style={{ width: "100%", height: "auto", borderRadius: 12 }}
+              />
+              <h3>Price Family Farm registration</h3>
+              <p>
+                Tennessee Department of Agriculture family farm name
+                registration for Greene County, dated June 16, 2026.
+              </p>
+              <a
+                className="stat-link"
+                href="/documents/price-family-farm-registration.pdf"
+                target="_blank"
+                rel="noreferrer"
+              >
+                View original registration PDF →
+              </a>
+            </article>
+
+            <article className="packet">
+              <Image
+                src={masterFarmManager}
+                alt="University of Tennessee Master Farm Manager Program completion certificate"
+                sizes="(max-width: 760px) 100vw, 50vw"
+                style={{ width: "100%", height: "auto", borderRadius: 12 }}
+              />
+              <h3>Master Farm Manager Program</h3>
+              <p>
+                University of Tennessee Institute of Agriculture Master
+                Farm Manager Program completion, July 31, 2026.
+              </p>
+              <a
+                className="stat-link"
+                href="/documents/alec-price-master-farm-manager.pdf"
+                target="_blank"
+                rel="noreferrer"
+              >
+                View original training certificate PDF →
+              </a>
+            </article>
+          </div>
         </div>
       </section>
 

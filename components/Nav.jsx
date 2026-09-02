@@ -9,29 +9,21 @@ const NAV_ITEMS = [
   {
     label: "Farm",
     children: [
-      { href: "/farm-os", label: "Farm OS" },
       { href: "/what-we-grow", label: "What We Grow" },
-      { href: "/available", label: "Availability" },
-      { href: "/farm-records", label: "Farm Records" },
-      { href: "/farm-analytics", label: "Farm Analytics" },
-      { href: "/crop-profitability", label: "Crop Profitability" },
-      { href: "/farm-inventory", label: "Farm Inventory" },
-      { href: "/farm-data-health", label: "Farm OS Data Health" },
+      { href: "/harvest", label: "2026 Season Tracker" },
+      { href: "/experiments", label: "Experiment Log" },
       { href: "/farm-journal", label: "Farm Journal" },
       { href: "/timeline", label: "Season Timeline" },
-      { href: "/funding", label: "Funding & Education" },
+      { href: "/available", label: "Availability" },
+      { href: "/farm-os", label: "Farm OS" },
     ],
   },
   {
     label: "Plan",
     children: [
       { href: "/farm-planner", label: "Farm Planner" },
-      { href: "/plantings", label: "Plantings & Successions" },
       { href: "/farm-calendar", label: "Farm Calendar" },
-      { href: "/market-planner", label: "Market Planner" },
-      { href: "/weekly-work-sheet", label: "Weekly Work Sheet" },
-      { href: "/learn/garden-layout-builder", label: "Garden Layout Builder" },
-      { href: "/farm-map", label: "Schematic Farm Map" },
+      { href: "/farm-map", label: "Farm Map" },
       { href: "/growing-guide", label: "Growing Guide" },
       { href: "/weather", label: "Growing Conditions" },
       { href: "/propagation", label: "Propagation & Grafting" },
@@ -57,6 +49,7 @@ export default function Nav() {
   const [openMenu, setOpenMenu] = useState("");
   const navRef = useRef(null);
   const toggleRef = useRef(null);
+  const menuToggleRefs = useRef(new Map());
 
   const isChildActive = (children) => children.some((child) => child.href === pathname);
 
@@ -66,10 +59,15 @@ export default function Nav() {
     }
     function onKey(event) {
       if (event.key === "Escape") {
-        const shouldReturnFocus = navRef.current?.contains(document.activeElement);
+        const mobileMenuWasOpen =
+          open && window.matchMedia("(max-width: 780px)").matches;
+        if (mobileMenuWasOpen) {
+          toggleRef.current?.focus();
+        } else if (openMenu) {
+          menuToggleRefs.current.get(openMenu)?.focus();
+        }
         setOpenMenu("");
         setOpen(false);
-        if (shouldReturnFocus) window.requestAnimationFrame(() => toggleRef.current?.focus());
       }
     }
     document.addEventListener("pointerdown", onDocumentPointer);
@@ -78,7 +76,7 @@ export default function Nav() {
       document.removeEventListener("pointerdown", onDocumentPointer);
       document.removeEventListener("keydown", onKey);
     };
-  }, []);
+  }, [open, openMenu]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 780px)");
@@ -132,7 +130,17 @@ export default function Nav() {
         <ul id="primary-nav-links" className={`nav-links${open ? " open" : ""}`}>
           {NAV_ITEMS.map((item) => item.children ? (
             <li key={item.label} className="nav-dropdown">
-              <button type="button" className="nav-dropdown-toggle" aria-expanded={openMenu === item.label} aria-current={isChildActive(item.children) ? "page" : undefined} onClick={() => setOpenMenu((current) => current === item.label ? "" : item.label)}>
+              <button
+                ref={(node) => {
+                  if (node) menuToggleRefs.current.set(item.label, node);
+                  else menuToggleRefs.current.delete(item.label);
+                }}
+                type="button"
+                className="nav-dropdown-toggle"
+                aria-expanded={openMenu === item.label}
+                aria-current={isChildActive(item.children) ? "page" : undefined}
+                onClick={() => setOpenMenu((current) => current === item.label ? "" : item.label)}
+              >
                 {item.label} <span className="caret" aria-hidden="true">▾</span>
               </button>
               <ul className={`dropdown-menu${openMenu === item.label ? " open" : ""}`}>

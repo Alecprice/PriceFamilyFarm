@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("farm planner persists crop plans and status locally", async ({ page }) => {
-  await page.goto("/farm-planner/");
+  await page.goto("/farm-os/planner/");
   await page.locator("#planner-crop").fill("Tomato");
   await page.locator("#planner-variety").fill("Cherokee Purple");
   await page.locator("#planner-space").fill("Bed A");

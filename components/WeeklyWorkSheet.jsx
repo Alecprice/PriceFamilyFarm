@@ -105,7 +105,7 @@ export default function WeeklyWorkSheet() {
         {week.markets.length ? <div className="farm-record-list">{week.markets.map((item) => <article className="farm-record" key={item.id || `${item.date}-${item.product}`}><div><div className="farm-record-meta">{item.date} · {item.status}</div><h3>{item.product}</h3><p>{Number.isFinite(item.marketQty) ? `${item.marketQty} ${item.unit} planned` : "No market quantity saved"} · {Number.isFinite(item.packedQty) ? `${item.packedQty} ${item.unit} packed` : "0 packed"} · {Number.isFinite(item.interestCount) ? `${item.interestCount} aggregate interest signals` : "No interest count saved"}.</p></div></article>)}</div> : <div className="farm-empty">No active market/pickup items fall in this week.</div>}
       </section>
 
-      <div className="farm-actions"><Link className="farm-action secondary" href="/market-planner">Open Market Planner</Link><Link className="farm-action secondary" href="/farm-inventory">Open Inventory</Link><Link className="farm-action secondary" href="/plantings">Open Plantings</Link><Link className="farm-action secondary" href="/farm-calendar">Open Calendar</Link></div>
+      <div className="farm-actions"><Link className="farm-action secondary" href="/market-planner">Open Market Planner</Link><Link className="farm-action secondary" href="/farm-inventory">Open Inventory</Link><Link className="farm-action secondary" href="/plantings">Open Plantings</Link><Link className="farm-action secondary" href="/farm-os/calendar">Open Calendar</Link></div>
     </div>
   );
 }

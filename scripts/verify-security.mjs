@@ -128,6 +128,49 @@ expect(
   "public sitemap excludes private Garden Layout Builder"
 );
 
+
+expect(
+  robots.includes('"/learn/garden-layout-builder"'),
+  "robots disallows private Garden Layout Builder"
+);
+expect(
+  robots.includes('"/farm-os"'),
+  "robots disallows the private Farm OS namespace"
+);
+
+const publicPrivateRoutePairs = [
+  { label: "experiments", route: "/experiments", publicFile: "app/experiments/page.js", privateFile: "app/farm-os/experiments/page.js" },
+  { label: "harvest", route: "/harvest", publicFile: "app/harvest/page.js", privateFile: "app/farm-os/harvest/page.js" },
+  { label: "farm journal", route: "/farm-journal", publicFile: "app/farm-journal/page.js", privateFile: "app/farm-os/journal/page.js" },
+  { label: "season timeline", route: "/timeline", publicFile: "app/timeline/page.js", privateFile: "app/farm-os/timeline/page.js" },
+  { label: "farm calendar", route: "/farm-calendar", publicFile: "app/farm-calendar/page.js", privateFile: "app/farm-os/calendar/page.js" },
+  { label: "farm map", route: "/farm-map", publicFile: "app/farm-map/page.js", privateFile: "app/farm-os/map/page.js" },
+  { label: "farm planner", route: "/farm-planner", publicFile: "app/farm-planner/page.js", privateFile: "app/farm-os/planner/page.js" },
+];
+
+for (const pair of publicPrivateRoutePairs) {
+  const publicSource = read(pair.publicFile);
+  const privateSource = read(pair.privateFile);
+  expect(!publicSource.includes("index: false"), `${pair.label} public route remains indexable`);
+  expect(privateSource.includes("index: false"), `${pair.label} private Farm OS route remains noindex`);
+  expect(sitemap.includes(`"${pair.route}"`), `${pair.label} public route remains in sitemap`);
+  expect(!robots.includes(`"${pair.route}"`), `${pair.label} public route is not blocked by robots`);
+}
+
+const preservedPublicDocuments = [
+  "public/documents/alec-price-master-farm-manager.pdf",
+  "public/documents/price-family-farm-registration.pdf",
+  "public/images/documents/farm-name-registration.webp",
+  "public/images/documents/master-farm-manager.webp",
+];
+for (const relative of preservedPublicDocuments) {
+  expect(fs.existsSync(path.join(root, relative)), `${relative} remains in the deployable public tree`);
+}
+
+const documentationSource = read("app/documentation/page.js");
+expect(documentationSource.includes("/documents/price-family-farm-registration.pdf"), "documentation links the farm registration PDF");
+expect(documentationSource.includes("/documents/alec-price-master-farm-manager.pdf"), "documentation links the Master Farm Manager PDF");
+
 expect(!fs.existsSync(path.join(root, ".env")), ".env is not committed");
 expect(!fs.existsSync(path.join(root, ".env.local")), ".env.local is not committed");
 const cloudFrontApply = read("scripts/apply-cloudfront-security.sh");

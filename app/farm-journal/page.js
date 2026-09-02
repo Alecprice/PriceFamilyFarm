@@ -1,19 +1,18 @@
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
-import FarmJournal from "@/components/FarmJournal";
+import JournalFilters from "@/components/JournalFilters";
 
 export const metadata = {
   title: "Farm Journal · Price Family Farm",
-  description: "A private browser-local journal for Price Family Farm field notes, observations, maintenance, planning, and market notes.",
-  robots: { index: false, follow: false },
+  description: "A living record of Price Family Farm: orchard work, infrastructure, education, experiments, harvests, and seasonal changes.",
 };
 
 export default function FarmJournalPage() {
   return (
     <>
       <Nav />
-      <header className="page-head"><div className="wrap"><span className="eyebrow on-dark">Farm OS · Private journal</span><h1>Keep the context that numbers alone cannot capture.</h1><p>Record observations, maintenance, market feedback, planning notes, and field decisions in a browser-local journal you can export.</p></div></header>
-      <main><div className="wrap"><FarmJournal /></div></main>
+      <header className="page-head"><div className="wrap"><span className="eyebrow on-dark">Farm Journal</span><h1>The farm as it actually happens.</h1><p>Projects, milestones, mistakes, observations, and seasonal work—kept in one timeline so each year can build on the last.</p></div></header>
+      <main id="main-content" tabIndex={-1}><section><div className="wrap"><div className="section-head"><span className="eyebrow">2026 baseline</span><h2>The first season becomes the reference point.</h2><p>This journal starts with confirmed milestones already documented across the site. Future entries can connect directly to a crop, farm area, harvest total, or experiment.</p></div><JournalFilters /></div></section></main>
       <Footer />
     </>
   );

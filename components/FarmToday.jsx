@@ -243,7 +243,7 @@ export default function FarmToday() {
       .sort((a, b) => (nextPlanDate(a) || "9999-12-31").localeCompare(nextPlanDate(b) || "9999-12-31") || a.crop.localeCompare(b.crop))
       .slice(0, 6);
     const recent = [
-      ...data.journal.map((item) => ({ id: `journal-${item.id}`, date: item.date, type: "Journal", title: item.title, detail: item.category, href: "/farm-journal" })),
+      ...data.journal.map((item) => ({ id: `journal-${item.id}`, date: item.date, type: "Journal", title: item.title, detail: item.category, href: "/farm-os/journal" })),
       ...data.harvests.map((item) => ({ id: `harvest-${item.id}`, date: item.date, type: "Harvest", title: item.variety ? `${item.crop} · ${item.variety}` : item.crop, detail: [item.quantity && item.unit ? `${item.quantity} ${item.unit}` : "", item.destination, item.saleAmount ? money(item.saleAmount) : ""].filter(Boolean).join(" · "), href: "/farm-records" })),
       ...data.expenses.map((item) => ({ id: `expense-${item.id}`, date: item.date, type: "Expense", title: item.description, detail: [item.category, money(item.amount)].filter(Boolean).join(" · "), href: "/farm-records" })),
     ].sort((a, b) => b.date.localeCompare(a.date) || a.type.localeCompare(b.type)).slice(0, 8);
@@ -399,7 +399,7 @@ export default function FarmToday() {
                     <h3>{item.task}</h3>
                     {item.notes ? <p>{item.notes}</p> : null}
                   </div>
-                  <Link className="farm-action secondary" href="/farm-calendar">Calendar</Link>
+                  <Link className="farm-action secondary" href="/farm-os/calendar">Calendar</Link>
                 </article>
               );
             })}
@@ -472,7 +472,7 @@ export default function FarmToday() {
                   <div className="farm-record-meta">{plan.status}{plan.space ? ` · ${plan.space}` : ""}{nextPlanDate(plan) ? ` · next dated milestone ${nextPlanDate(plan)}` : ""}</div>
                   <h3>{plan.crop}{plan.variety ? ` · ${plan.variety}` : ""}</h3>
                 </div>
-                <Link className="farm-action secondary" href="/farm-planner">Planner</Link>
+                <Link className="farm-action secondary" href="/farm-os/planner">Planner</Link>
               </article>
             ))}
           </div>
@@ -495,9 +495,9 @@ export default function FarmToday() {
       </section>
 
       <div className="farm-actions">
-        <Link className="farm-action secondary" href="/farm-calendar">Full calendar</Link>
+        <Link className="farm-action secondary" href="/farm-os/calendar">Full calendar</Link>
         <Link className="farm-action secondary" href="/farm-records">Farm records</Link>
-        <Link className="farm-action secondary" href="/farm-journal">Farm journal</Link>
+        <Link className="farm-action secondary" href="/farm-os/journal">Farm journal</Link>
         <Link className="farm-action secondary" href="/farm-backup">Back up Farm OS</Link>
         <Link className="farm-action secondary" href="/farm-os">Back to Farm OS</Link>
       </div>

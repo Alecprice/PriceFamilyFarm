@@ -21,6 +21,13 @@ export default function sitemap() {
     "/available",
     "/weather",
     "/contact",
+    "/farm-journal",
+    "/farm-map",
+    "/harvest",
+    "/experiments",
+    "/timeline",
+    "/farm-planner",
+    "/farm-calendar",
 
     "/learn",
     "/learn/bugs",

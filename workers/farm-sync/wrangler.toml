@@ -1,0 +1,12 @@
+name = "price-family-farm-cloud-sync"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+PFF_ALLOWED_ORIGIN = "https://price-family-farm.alecjprice.com"
+
+# Production secrets:
+# npx wrangler secret put DATABASE_URL
+# npx wrangler secret put PFF_SYNC_TOKEN
+[secrets]
+required = ["DATABASE_URL", "PFF_SYNC_TOKEN"]

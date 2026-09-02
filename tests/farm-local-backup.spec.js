@@ -44,9 +44,67 @@ test("Farm OS local backup exports known stores and restores only validated sele
     planner: localStorage.getItem("price-family-farm-planner-v1"),
     garden: localStorage.getItem("price-family-farm-garden-layout-v1"),
     unknown: localStorage.getItem("unknownRemoteStore"),
+    snapshot: JSON.parse(
+      localStorage.getItem("price-family-farm-pre-restore-snapshot-v1") || "null",
+    ),
   }));
   expect(state.planner).toContain("Cherokee Purple");
   expect(state.garden).toBeNull();
   expect(state.unknown).toBeNull();
+  expect(state.snapshot?.version).toBe(2);
+  expect(state.snapshot?.stores?.planner).toEqual([{ id: "old", crop: "Old plan", status: "Planned" }]);
   await expect(page.getByRole("status")).toContainText("Restored 1 selected Farm OS data area");
+});
+
+test("local backup recovery restores old values and removes stores that were previously absent", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "price-family-farm-planner-v1",
+      JSON.stringify([{ id: "old", crop: "Old plan", status: "Planned" }]),
+    );
+  });
+
+  await page.goto("/farm-backup/");
+
+  const backup = {
+    version: 1,
+    exportedAt: "2026-09-01T20:00:00.000Z",
+    stores: {
+      planner: [{ id: "new", crop: "Cherokee Purple", status: "Started" }],
+      garden: [{ id: "bed-1", name: "Bed A", length: "12", width: "4", crop: "Tomatoes" }],
+    },
+  };
+
+  await page.getByLabel("Choose Farm OS backup file").setInputFiles({
+    name: "farm-backup.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(backup)),
+  });
+  await page.getByLabel("Type RESTORE to confirm").fill("RESTORE");
+  await page.getByRole("button", { name: "Restore selected local data" }).click();
+
+  const afterRestore = await page.evaluate(() => ({
+    planner: JSON.parse(localStorage.getItem("price-family-farm-planner-v1") || "null"),
+    garden: JSON.parse(localStorage.getItem("price-family-farm-garden-layout-v1") || "null"),
+  }));
+  expect(afterRestore.planner).toEqual([{ id: "new", crop: "Cherokee Purple", status: "Started" }]);
+  expect(afterRestore.garden).toEqual([{ id: "bed-1", name: "Bed A", length: "12", width: "4", crop: "Tomatoes" }]);
+
+  await expect(page.getByRole("heading", { name: "Undo the most recent file restore." })).toBeVisible();
+  const recover = page.getByRole("button", { name: "Restore pre-file-restore browser state" });
+  await expect(recover).toBeDisabled();
+  await page.getByLabel("Type RECOVER to restore the pre-file-restore browser state").fill("RECOVER");
+  await expect(recover).toBeEnabled();
+  await recover.click();
+
+  await expect(page.getByRole("status")).toContainText(
+    "Recovered 1 prior Farm OS data area and removed 1 area",
+  );
+
+  const recovered = await page.evaluate(() => ({
+    planner: JSON.parse(localStorage.getItem("price-family-farm-planner-v1") || "null"),
+    garden: localStorage.getItem("price-family-farm-garden-layout-v1"),
+  }));
+  expect(recovered.planner).toEqual([{ id: "old", crop: "Old plan", status: "Planned" }]);
+  expect(recovered.garden).toBeNull();
 });

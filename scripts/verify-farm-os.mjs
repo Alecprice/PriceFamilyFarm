@@ -29,6 +29,7 @@ const required = [
   "app/available/page.js",
   "app/funding/page.js",
   "app/weather/page.js",
+  "components/FarmOsDashboard.jsx",
   "components/FarmRecordWorkspace.jsx",
   "components/FarmAnalyticsDashboard.jsx",
   "components/FarmInventory.jsx",
@@ -43,6 +44,7 @@ const required = [
   "components/FundingEducationTracker.jsx",
   "components/WeatherPanel.jsx",
   "lib/contactConfig.js",
+  "lib/farmStoreRegistry.js",
 ];
 
 for (const file of required) expect(fs.existsSync(path.join(root, file)), `required file exists: ${file}`);
@@ -90,6 +92,7 @@ expect(dataHealth.includes("confirmation !== \"REPAIR\""), "data health requires
 expect(!dataHealth.includes("fetch("), "data health never uploads private stores");
 
 const backup = read("components/FarmLocalBackup.jsx");
+const storeRegistry = read("lib/farmStoreRegistry.js");
 for (const key of [
   "price-family-farm-inventory-v1",
   "price-family-farm-plantings-v1",
@@ -97,9 +100,34 @@ for (const key of [
   "pff.growingJourney.v1",
   "pff.growingJourney.backups.v1",
 ]) {
-  expect(backup.includes(key), `Farm OS backup allowlist includes ${key}`);
+  expect(storeRegistry.includes(key), `Farm OS shared backup/sync allowlist includes ${key}`);
 }
+expect(
+  backup.includes('from "@/lib/farmStoreRegistry"'),
+  "Farm OS backup imports the canonical shared backup/sync allowlist"
+);
+expect(
+  backup.includes("FARM_STORES"),
+  "Farm OS backup enumerates the canonical shared store registry"
+);
+expect(
+  backup.includes("validFarmStoreValue"),
+  "Farm OS backup uses canonical shared store validation"
+);
 expect(backup.includes("price-family-farm-pre-restore-snapshot-v1"), "Farm OS backup captures a pre-restore snapshot");
+
+const osDashboard = read("components/FarmOsDashboard.jsx");
+expect(osDashboard.includes('from "@/lib/farmStoreRegistry"'), "Farm OS dashboard imports the canonical shared store registry");
+expect(osDashboard.includes("FARM_STORES"), "Farm OS dashboard counts every canonical Farm OS store");
+expect(osDashboard.includes("readValidFarmStore"), "Farm OS dashboard reuses canonical store validation");
+expect(!osDashboard.includes("const STORES ="), "Farm OS dashboard does not duplicate local-storage key and size definitions");
+expect(osDashboard.includes("detectedStoreCount"), "Farm OS dashboard reports the complete detected canonical store count");
+
+const osExpansion = read("components/FarmOsExpansionPanel.jsx");
+expect(osExpansion.includes('from "@/lib/farmStoreRegistry"'), "Farm OS expansion panel imports the canonical shared store registry");
+expect(osExpansion.includes("FARM_STORE_BY_ID"), "Farm OS expansion panel resolves inventory, planting, and market stores canonically");
+expect(osExpansion.includes("readValidFarmStore"), "Farm OS expansion panel reuses canonical store validation");
+expect(!osExpansion.includes("const STORES ="), "Farm OS expansion panel does not duplicate storage keys or byte limits");
 
 const privacy = read("components/PrivacyTools.jsx");
 expect(privacy.includes("pff.growingJourney.v1"), "privacy tools expose Growing Journey local data");
@@ -112,7 +140,11 @@ expect(journeyStorage.includes("export function isValidPlanShape"), "Growing Jou
 expect(journeyStorage.includes("isValidCropRecord"), "Growing Journey validates imported crop records");
 expect(journeyStorage.includes("isValidTaskRecord"), "Growing Journey validates imported custom tasks");
 expect(journeyStorage.includes("raw.length>MAX_PLAN_BYTES") || journeyStorage.includes("raw.length > MAX_PLAN_BYTES"), "Growing Journey rejects oversized stored plans before parsing");
-expect(backup.includes("isValidPlanShape"), "Farm OS backup reuses canonical Growing Journey validation");
+expect(
+  storeRegistry.includes("isValidPlanShape") &&
+    storeRegistry.includes("isValidBackupCollection"),
+  "Farm OS shared registry reuses canonical Growing Journey validation"
+);
 expect(dataHealth.includes("isValidPlanShape"), "Data Health reuses canonical Growing Journey validation");
 
 const funding = read("components/FundingEducationTracker.jsx");
@@ -140,29 +172,69 @@ expect(weather.includes("No weather values are being guessed"), "weather fallbac
 
 const nav = read("components/Nav.jsx");
 for (const label of ["Farm", "Plan", "Learn", "Contact"]) expect(nav.includes(`label: "${label}"`), `task-oriented nav includes ${label}`);
-for (const label of ["Farm Analytics", "Crop Profitability", "Farm Inventory", "Farm OS Data Health", "Plantings & Successions", "Market Planner", "Weekly Work Sheet"]) {
-  expect(nav.includes(`label: "${label}"`), `navigation exposes ${label}`);
+for (const label of ["What We Grow", "2026 Season Tracker", "Experiment Log", "Farm Journal", "Season Timeline", "Availability", "Farm OS", "Farm Planner", "Farm Calendar", "Farm Map", "Growing Guide", "Growing Conditions"]) {
+  expect(nav.includes(`label: "${label}"`), `public navigation exposes ${label}`);
+}
+for (const label of ["Farm Analytics", "Crop Profitability", "Farm Inventory", "Farm OS Data Health", "Plantings & Successions", "Market Planner", "Weekly Work Sheet", "Farm Records", "Funding & Education"]) {
+  expect(!nav.includes(`label: "${label}"`), `public navigation keeps ${label} behind the Farm OS doorway`);
+}
+for (const href of ["/farm-records", "/farm-analytics", "/farm-os/planner", "/farm-os/calendar", "/farm-os/timeline", "/farm-os/journal", "/farm-os/map", "/funding"]) {
+  expect(osDashboard.includes(`href="${href}"`), `Farm OS dashboard retains private access to ${href}`);
+}
+for (const href of ["/farm-inventory", "/plantings", "/market-planner", "/crop-profitability", "/weekly-work-sheet", "/farm-data-health", "/farm-backup"]) {
+  expect(osExpansion.includes(`href="${href}"`), `Farm OS expansion retains private access to ${href}`);
 }
 
-const privateRoutes = [
-  "farm-os",
-  "farm-today",
-  "farm-records",
-  "farm-analytics",
-  "farm-inventory",
-  "plantings",
-  "crop-profitability",
-  "farm-data-health",
-  "market-planner",
-  "weekly-work-sheet",
-  "funding",
+const privatePageFiles = [
+  "app/farm-os/page.js",
+  "app/farm-os/cloud-sync/page.js",
+  "app/farm-os/experiments/page.js",
+  "app/farm-os/harvest/page.js",
+  "app/farm-os/journal/page.js",
+  "app/farm-os/timeline/page.js",
+  "app/farm-os/calendar/page.js",
+  "app/farm-os/map/page.js",
+  "app/farm-os/planner/page.js",
+  "app/farm-today/page.js",
+  "app/farm-weekly-review/page.js",
+  "app/weekly-work-sheet/page.js",
+  "app/farm-records/page.js",
+  "app/farm-analytics/page.js",
+  "app/crop-profitability/page.js",
+  "app/farm-inventory/page.js",
+  "app/farm-data-health/page.js",
+  "app/plantings/page.js",
+  "app/market-planner/page.js",
+  "app/learn/garden-layout-builder/page.js",
+  "app/funding/page.js",
+  "app/privacy-tools/page.js",
+  "app/farm-backup/page.js",
+  "app/my-growing-journey/page.js",
 ];
-const privatePages = privateRoutes.map((route) => read(`app/${route}/page.js`));
-expect(privatePages.every((source) => source.includes("index: false")), "browser-local operating pages are noindex");
+for (const file of privatePageFiles) {
+  expect(read(file).includes("index: false"), `browser-local page is noindex: ${file}`);
+}
 
 const robots = read("app/robots.js");
-for (const route of ["/farm-analytics", "/farm-inventory", "/plantings", "/crop-profitability", "/farm-data-health", "/market-planner", "/weekly-work-sheet"]) {
-  expect(robots.includes(`"${route}"`), `robots disallows private route ${route}`);
+for (const route of [
+  "/farm-os",
+  "/farm-today",
+  "/farm-weekly-review",
+  "/weekly-work-sheet",
+  "/farm-records",
+  "/farm-analytics",
+  "/crop-profitability",
+  "/farm-inventory",
+  "/farm-data-health",
+  "/plantings",
+  "/market-planner",
+  "/learn/garden-layout-builder",
+  "/funding",
+  "/privacy-tools",
+  "/farm-backup",
+  "/my-growing-journey",
+]) {
+  expect(robots.includes(`"${route}"`), `robots disallows browser-local route ${route}`);
 }
 
 if (failures.length) {

@@ -150,7 +150,7 @@ export default function FarmMapPlanner() {
         ) : <div className="farm-empty">No schematic farm zones saved yet.</div>}
       </section>
 
-      <div className="farm-actions"><Link className="farm-action secondary" href="/farm-os">Back to Farm OS</Link><Link className="farm-action secondary" href="/farm-planner">Open Farm Planner</Link></div>
+      <div className="farm-actions"><Link className="farm-action secondary" href="/farm-os">Back to Farm OS</Link><Link className="farm-action secondary" href="/farm-os/planner">Open Farm Planner</Link></div>
     </div>
   );
 }
