@@ -3,23 +3,19 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { localDay, localDayPlus } from "@/lib/localDate";
+import {
+  FARM_STORE_BY_ID,
+  readValidFarmStore,
+} from "@/lib/farmStoreRegistry";
 
-const STORES = {
-  inventory: { key: "price-family-farm-inventory-v1", max: 500_000, items: 500 },
-  plantings: { key: "price-family-farm-plantings-v1", max: 1_000_000, items: 1_000 },
-  market: { key: "price-family-farm-market-plan-v1", max: 750_000, items: 500 },
-};
 const BACKUP_META_KEY = "price-family-farm-backup-meta-v1";
+const MAX_INVENTORY_ITEMS = 500;
+const MAX_PLANTING_ITEMS = 1_000;
+const MAX_MARKET_ITEMS = 500;
 
-function readArray(store) {
-  try {
-    const raw = localStorage.getItem(store.key);
-    if (!raw || raw.length > store.max) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.slice(0, store.items) : [];
-  } catch {
-    return [];
-  }
+function readCanonicalArray(store, maxItems) {
+  const value = readValidFarmStore(store);
+  return Array.isArray(value) ? value.slice(0, maxItems) : [];
 }
 
 function readMeta() {
@@ -52,9 +48,9 @@ export default function FarmOsExpansionPanel() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setInventory(readArray(STORES.inventory));
-    setPlantings(readArray(STORES.plantings));
-    setMarket(readArray(STORES.market));
+    setInventory(readCanonicalArray(FARM_STORE_BY_ID.inventory, MAX_INVENTORY_ITEMS));
+    setPlantings(readCanonicalArray(FARM_STORE_BY_ID.plantings, MAX_PLANTING_ITEMS));
+    setMarket(readCanonicalArray(FARM_STORE_BY_ID.market, MAX_MARKET_ITEMS));
     setBackupMeta(readMeta());
     setReady(true);
   }, []);
