@@ -172,8 +172,17 @@ expect(weather.includes("No weather values are being guessed"), "weather fallbac
 
 const nav = read("components/Nav.jsx");
 for (const label of ["Farm", "Plan", "Learn", "Contact"]) expect(nav.includes(`label: "${label}"`), `task-oriented nav includes ${label}`);
-for (const label of ["Farm Analytics", "Crop Profitability", "Farm Inventory", "Farm OS Data Health", "Plantings & Successions", "Market Planner", "Weekly Work Sheet"]) {
-  expect(nav.includes(`label: "${label}"`), `navigation exposes ${label}`);
+for (const label of ["What We Grow", "2026 Season Tracker", "Experiment Log", "Farm Journal", "Season Timeline", "Availability", "Farm OS", "Farm Planner", "Farm Calendar", "Farm Map", "Growing Guide", "Growing Conditions"]) {
+  expect(nav.includes(`label: "${label}"`), `public navigation exposes ${label}`);
+}
+for (const label of ["Farm Analytics", "Crop Profitability", "Farm Inventory", "Farm OS Data Health", "Plantings & Successions", "Market Planner", "Weekly Work Sheet", "Farm Records", "Funding & Education"]) {
+  expect(!nav.includes(`label: "${label}"`), `public navigation keeps ${label} behind the Farm OS doorway`);
+}
+for (const href of ["/farm-records", "/farm-analytics", "/farm-inventory", "/farm-os/planner", "/farm-os/calendar", "/farm-os/timeline", "/farm-os/journal", "/farm-os/map", "/funding"]) {
+  expect(osDashboard.includes(`href="${href}"`), `Farm OS dashboard retains private access to ${href}`);
+}
+for (const href of ["/plantings", "/market-planner", "/crop-profitability", "/weekly-work-sheet", "/farm-data-health", "/farm-backup"]) {
+  expect(osExpansion.includes(`href="${href}"`), `Farm OS expansion retains private access to ${href}`);
 }
 
 const privateRoutes = [
