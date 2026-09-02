@@ -3,16 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { localDay } from "@/lib/localDate";
+import {
+  FARM_STORES,
+  FARM_STORE_BY_ID,
+  readValidFarmStore,
+} from "@/lib/farmStoreRegistry";
 
-const STORES = {
-  records: { key: "price-family-farm-records-v2", max: 2_000_000 },
-  funding: { key: "price-family-farm-funding-v1", max: 500_000 },
-  planner: { key: "price-family-farm-planner-v1", max: 1_000_000 },
-  calendar: { key: "price-family-farm-calendar-v1", max: 1_000_000 },
-  journal: { key: "price-family-farm-journal-v1", max: 1_000_000 },
-  garden: { key: "price-family-farm-garden-layout-v1", max: 500_000 },
-  map: { key: "price-family-farm-map-v1", max: 500_000 },
-};
 const MAX_RECORDS = 5_000;
 const MAX_FUNDING = 250;
 const MAX_PLANS = 500;
@@ -31,7 +27,7 @@ const EMPTY = {
   journal: [],
   beds: [],
   zones: [],
-  found: {},
+  detectedStoreCount: 0,
 };
 
 function safeArray(value, max) {
@@ -43,62 +39,30 @@ function safeNumber(value) {
   return Number.isFinite(number) && number >= 0 ? number : 0;
 }
 
-function readJson(store) {
-  const raw = localStorage.getItem(store.key);
-  if (!raw || raw.length > store.max) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
 function readDashboardState() {
-  const next = { ...EMPTY, found: {} };
+  const next = { ...EMPTY };
+  const values = Object.fromEntries(
+    FARM_STORES.map((store) => [store.id, readValidFarmStore(store)]),
+  );
 
-  const records = readJson(STORES.records);
+  next.detectedStoreCount = FARM_STORES.reduce(
+    (count, store) => count + (values[store.id] !== null ? 1 : 0),
+    0,
+  );
+
+  const records = values[FARM_STORE_BY_ID.records.id];
   if (records && typeof records === "object" && !Array.isArray(records)) {
     next.harvests = safeArray(records.harvests, MAX_RECORDS);
     next.experiments = safeArray(records.experiments, MAX_RECORDS);
     next.expenses = safeArray(records.expenses, MAX_RECORDS);
-    next.found.records = true;
   }
 
-  const funding = readJson(STORES.funding);
-  if (Array.isArray(funding)) {
-    next.funding = safeArray(funding, MAX_FUNDING);
-    next.found.funding = true;
-  }
-
-  const planner = readJson(STORES.planner);
-  if (Array.isArray(planner)) {
-    next.plans = safeArray(planner, MAX_PLANS);
-    next.found.planner = true;
-  }
-
-  const calendar = readJson(STORES.calendar);
-  if (Array.isArray(calendar)) {
-    next.calendar = safeArray(calendar, MAX_CALENDAR);
-    next.found.calendar = true;
-  }
-
-  const journal = readJson(STORES.journal);
-  if (Array.isArray(journal)) {
-    next.journal = safeArray(journal, MAX_JOURNAL);
-    next.found.journal = true;
-  }
-
-  const garden = readJson(STORES.garden);
-  if (Array.isArray(garden)) {
-    next.beds = safeArray(garden, MAX_BEDS);
-    next.found.garden = true;
-  }
-
-  const map = readJson(STORES.map);
-  if (Array.isArray(map)) {
-    next.zones = safeArray(map, MAX_ZONES);
-    next.found.map = true;
-  }
+  next.funding = safeArray(values[FARM_STORE_BY_ID.funding.id], MAX_FUNDING);
+  next.plans = safeArray(values[FARM_STORE_BY_ID.planner.id], MAX_PLANS);
+  next.calendar = safeArray(values[FARM_STORE_BY_ID.calendar.id], MAX_CALENDAR);
+  next.journal = safeArray(values[FARM_STORE_BY_ID.journal.id], MAX_JOURNAL);
+  next.beds = safeArray(values[FARM_STORE_BY_ID.garden.id], MAX_BEDS);
+  next.zones = safeArray(values[FARM_STORE_BY_ID.map.id], MAX_ZONES);
 
   return next;
 }
@@ -190,7 +154,7 @@ export default function FarmOsDashboard() {
 
       <section className="farm-panel" aria-labelledby="farm-os-browser-state">
         <h2 id="farm-os-browser-state">This browser&rsquo;s Farm OS state.</h2>
-        <p>{ready ? `${countLabel(Object.keys(data.found).length, "local Farm OS data store")} detected on this device.` : "Checking this browser for local Farm OS data."}</p>
+        <p>{ready ? `${countLabel(data.detectedStoreCount, "local Farm OS data store")} detected on this device.` : "Checking this browser for local Farm OS data."}</p>
         <div className="farm-actions">
           <Link className="farm-action secondary" href="/weather">Check growing conditions</Link>
           <Link className="farm-action secondary" href="/farm-backup">Back up local farm data</Link>
