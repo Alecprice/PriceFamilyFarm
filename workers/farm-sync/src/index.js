@@ -220,11 +220,14 @@ const worker = {
       if (!KEY_PATTERN.test(key) || !ALLOWED_DOCUMENT_KEYS.has(key)) {
         return json(env, { error: "invalid_document_key" }, 400);
       }
-
-      const schema = await readSchema(sql);
-      if (!schemaReady(schema)) return schemaNotReady(env, schema);
+      if (request.method !== "GET" && request.method !== "PUT") {
+        return json(env, { error: "method_not_allowed" }, 405);
+      }
 
       if (request.method === "GET") {
+        const schema = await readSchema(sql);
+        if (!schemaReady(schema)) return schemaNotReady(env, schema);
+
         const farmId = await currentFarmId(sql);
         const rows = await sql`
           SELECT
@@ -244,67 +247,66 @@ const worker = {
         return json(env, rows[0]);
       }
 
-      if (request.method === "PUT") {
-        const raw = await readBoundedBody(request);
+      const raw = await readBoundedBody(request);
 
-        let body;
-        try {
-          body = JSON.parse(raw);
-        } catch {
-          return json(env, { error: "invalid_json" }, 400);
-        }
-
-        if (!body || typeof body !== "object" || Array.isArray(body)) {
-          return json(env, { error: "invalid_body" }, 400);
-        }
-
-        const schemaVersion = Number(body.schemaVersion);
-        const expectedRevision = Number(body.expectedRevision);
-        const checksum =
-          typeof body.checksum === "string"
-            ? body.checksum.trim().toLowerCase()
-            : "";
-        const sourceDeviceKey =
-          typeof body.sourceDeviceKey === "string"
-            ? body.sourceDeviceKey.trim()
-            : "";
-
-        if (schemaVersion !== 1) {
-          return json(env, { error: "invalid_schema_version" }, 400);
-        }
-        if (!Number.isInteger(expectedRevision) || expectedRevision < 0) {
-          return json(env, { error: "invalid_expected_revision" }, 400);
-        }
-        if (!Object.prototype.hasOwnProperty.call(body, "payload")) {
-          return json(env, { error: "payload_required" }, 400);
-        }
-        if (!sourceDeviceKey || sourceDeviceKey.length > 200) {
-          return json(env, { error: "invalid_source_device_key" }, 400);
-        }
-        if (
-          !CHECKSUM_PATTERN.test(checksum) ||
-          checksum !== (await payloadChecksum(body.payload))
-        ) {
-          return json(env, { error: "invalid_checksum" }, 400);
-        }
-
-        const resultRows = await sql`
-          SELECT pff_put_document(
-            ${key},
-            ${JSON.stringify(body.payload)}::jsonb,
-            ${schemaVersion},
-            ${expectedRevision},
-            ${checksum},
-            ${sourceDeviceKey}
-          ) AS result
-        `;
-
-        const result = resultRows[0]?.result;
-        if (result?.status === "conflict") return json(env, result, 409);
-        return json(env, result ?? { error: "sync_failed" }, 200);
+      let body;
+      try {
+        body = JSON.parse(raw);
+      } catch {
+        return json(env, { error: "invalid_json" }, 400);
       }
 
-      return json(env, { error: "method_not_allowed" }, 405);
+      if (!body || typeof body !== "object" || Array.isArray(body)) {
+        return json(env, { error: "invalid_body" }, 400);
+      }
+
+      const schemaVersion = Number(body.schemaVersion);
+      const expectedRevision = Number(body.expectedRevision);
+      const checksum =
+        typeof body.checksum === "string"
+          ? body.checksum.trim().toLowerCase()
+          : "";
+      const sourceDeviceKey =
+        typeof body.sourceDeviceKey === "string"
+          ? body.sourceDeviceKey.trim()
+          : "";
+
+      if (schemaVersion !== 1) {
+        return json(env, { error: "invalid_schema_version" }, 400);
+      }
+      if (!Number.isInteger(expectedRevision) || expectedRevision < 0) {
+        return json(env, { error: "invalid_expected_revision" }, 400);
+      }
+      if (!Object.prototype.hasOwnProperty.call(body, "payload")) {
+        return json(env, { error: "payload_required" }, 400);
+      }
+      if (!sourceDeviceKey || sourceDeviceKey.length > 200) {
+        return json(env, { error: "invalid_source_device_key" }, 400);
+      }
+      if (
+        !CHECKSUM_PATTERN.test(checksum) ||
+        checksum !== (await payloadChecksum(body.payload))
+      ) {
+        return json(env, { error: "invalid_checksum" }, 400);
+      }
+
+      const schema = await readSchema(sql);
+      if (!schemaReady(schema)) return schemaNotReady(env, schema);
+
+      const resultRows = await sql`
+        SELECT pff_put_document(
+          ${key},
+          ${JSON.stringify(body.payload)}::jsonb,
+          ${schemaVersion},
+          ${expectedRevision},
+          ${checksum},
+          ${sourceDeviceKey}
+        ) AS result
+      `;
+
+      const result = resultRows[0]?.result;
+      if (result?.status === "conflict") return json(env, result, 409);
+      return json(env, result ?? { error: "sync_failed" }, 200);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (message.includes("payload_too_large")) {
