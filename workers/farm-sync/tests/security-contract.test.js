@@ -52,10 +52,15 @@ describe("Farm OS cloud sync security contracts", () => {
   });
 
   it("serializes first-write races before the document row lookup", () => {
-    expect(migration002).toContain("pg_advisory_xact_lock");
-    expect(migration002.indexOf("pg_advisory_xact_lock")).toBeLessThan(
-      migration002.indexOf("FOR UPDATE"),
+    const advisoryLockIndex = migration002.indexOf(
+      "PERFORM pg_advisory_xact_lock(",
     );
+    const rowLookupIndex = migration002.indexOf("SELECT *", advisoryLockIndex);
+    const rowLockIndex = migration002.indexOf("FOR UPDATE", rowLookupIndex);
+
+    expect(advisoryLockIndex).toBeGreaterThanOrEqual(0);
+    expect(rowLookupIndex).toBeGreaterThan(advisoryLockIndex);
+    expect(rowLockIndex).toBeGreaterThan(rowLookupIndex);
     expect(migration002).toContain("'version', 2");
   });
 });
