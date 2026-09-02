@@ -12,6 +12,7 @@ export const metadata = {
 export default function AvailabilityPage() {
   return (
     <>
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <Nav />
       <header className="page-head">
         <div className="wrap">
@@ -20,7 +21,7 @@ export default function AvailabilityPage() {
           <p>Production changes with weather, germination, harvest timing, and the season. Confirmed availability belongs here; future interest belongs on the list below.</p>
         </div>
       </header>
-      <main className="farm-tools-shell">
+      <main id="main-content" className="farm-tools-shell" tabIndex={-1}>
         <div className="wrap">
           <AvailabilityGuide />
           <div className="interest-grid">
