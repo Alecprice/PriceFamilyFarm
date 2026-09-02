@@ -121,6 +121,63 @@ test("checksum mismatch stops cloud restore before browser data is replaced", as
   expect(storage.recovery).toBeNull();
 });
 
+test("partial cloud upload reports confirmed progress and preserves revision checkpoints", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "price-family-farm-records-v2",
+      JSON.stringify({ version: 2, entries: [] }),
+    );
+    localStorage.setItem(
+      "price-family-farm-funding-v1",
+      JSON.stringify([{ id: "funding-browser-copy" }]),
+    );
+  });
+
+  let putCount = 0;
+  await page.route("http://localhost:8787/v1/documents/**", async (route) => {
+    if (route.request().method() !== "PUT") {
+      await route.continue();
+      return;
+    }
+
+    putCount += 1;
+    if (putCount === 1) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ status: "ok", revision: 1 }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "simulated_outage" }),
+    });
+  });
+
+  await page.goto("/farm-os/cloud-sync/");
+  await page.getByLabel("Local development endpoint").fill("http://localhost:8787");
+  await page.getByLabel("Private sync token").fill("test-token");
+  await page.getByRole("button", { name: "Sync browser data to cloud" }).click();
+
+  await expect(page.getByRole("status")).toContainText(
+    "1 data area was uploaded before the next request stopped while syncing Funding & education",
+  );
+  await expect(page.getByRole("status")).toContainText(
+    "Completed revision checkpoints were preserved",
+  );
+  await expect(page.getByRole("status")).toContainText("simulated_outage");
+
+  const revisions = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("price-family-farm-cloud-sync-revisions-v1") || "{}"),
+  );
+  expect(revisions.records).toBe(1);
+  expect(revisions.funding).toBeUndefined();
+  expect(putCount).toBe(2);
+});
+
 test("pre-pull recovery restores prior values, absences, and revisions together", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem(
