@@ -23,6 +23,7 @@ const backup = read("components/FarmLocalBackup.jsx");
 const worker = read("workers/farm-sync/src/index.js");
 const workerConfig = read("workers/farm-sync/wrangler.toml");
 const sitemap = read("app/sitemap.js");
+const envExample = read(".env.example");
 
 const migration = read("workers/farm-sync/migrations/001_initial_cloud_sync.sql");
 const migration002 = read("workers/farm-sync/migrations/002_serialize_document_creates.sql");
@@ -46,6 +47,16 @@ expect(!sitemap.includes('"/farm-os/cloud-sync"'), "Cloud Sync page is excluded 
 expect(component.includes('type="password"'), "Cloud Sync token control is password-masked");
 expect(client.includes("sessionStorage"), "sync token uses session storage");
 expect(!client.includes("localStorage.setItem(TOKEN_KEY"), "sync token is never persisted in local storage");
+expect(envExample.includes("NEXT_PUBLIC_FARM_SYNC_ENDPOINT="), "example environment declares the public Farm OS sync endpoint");
+expect(client.includes("process.env.NEXT_PUBLIC_FARM_SYNC_ENDPOINT"), "client reads a build-configured production sync endpoint");
+expect(client.includes("resolveAllowedSyncEndpoint"), "client resolves an allowlisted sync destination before requests");
+expect(client.includes("url.username || url.password || url.search || url.hash"), "sync endpoint rejects embedded credentials, query strings, and fragments");
+expect(client.includes('url.pathname && url.pathname !== "/"'), "sync endpoint rejects non-origin URL paths");
+const allowedEndpointCheck = client.indexOf("const allowedEndpoint = resolveAllowedSyncEndpoint(endpoint)");
+const allowedEndpointFetch = client.indexOf("await fetch(`${allowedEndpoint}${path}`", allowedEndpointCheck);
+expect(allowedEndpointCheck >= 0 && allowedEndpointFetch > allowedEndpointCheck, "bearer-token requests resolve the trusted endpoint before fetch");
+expect(component.includes("Production builds only send that token to the configured Farm OS sync origin"), "Cloud Sync UI explains the production token destination lock");
+expect(component.includes("This development field accepts loopback origins only"), "unconfigured builds explain their loopback-only development boundary");
 expect(client.includes("PRE_PULL_KEY"), "cloud pull preserves a pre-pull local recovery snapshot");
 expect(client.includes('throw new Error("pre_pull_snapshot_too_large")'), "cloud pull aborts when a safe recovery snapshot exceeds its size limit");
 expect(client.includes('throw new Error("pre_pull_snapshot_failed")'), "cloud pull aborts when browser storage cannot save the recovery snapshot");
