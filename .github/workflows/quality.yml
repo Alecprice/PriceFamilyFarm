@@ -31,7 +31,10 @@ jobs:
         run: npm ci
 
       - name: Audit dependency vulnerabilities
-        run: npm audit --audit-level=high
+        id: dependency_audit
+        run: |
+          set -o pipefail
+          npm audit --audit-level=high 2>&1 | tee dependency-audit.log
 
       - name: Lint source
         id: lint
@@ -49,7 +52,16 @@ jobs:
           done 2>&1 | tee shell.log
 
       - name: Farm OS contracts
-        run: node scripts/verify-farm-os.mjs
+        id: farm_os
+        run: |
+          set -o pipefail
+          node scripts/verify-farm-os.mjs 2>&1 | tee farm-os.log
+
+      - name: CI workflow contracts
+        id: ci_contracts
+        run: |
+          set -o pipefail
+          node scripts/verify-quality-workflow.mjs 2>&1 | tee ci-workflow.log
 
       - name: Security contracts
         id: security
@@ -73,14 +85,20 @@ jobs:
           npm run bundle:check 2>&1 | tee worker-bundle.log
           npm audit --audit-level=high 2>&1 | tee worker-audit.log
 
-      - name: Report lint, security, Cloud Sync, or worker-contract failure
-        if: failure() && github.event_name == 'pull_request' && (steps.lint.outcome == 'failure' || steps.shell.outcome == 'failure' || steps.security.outcome == 'failure' || steps.cloud_sync.outcome == 'failure' || steps.worker.outcome == 'failure')
+      - name: Report source, security, or worker gate failure
+        if: failure() && github.event_name == 'pull_request' && (steps.dependency_audit.outcome == 'failure' || steps.lint.outcome == 'failure' || steps.shell.outcome == 'failure' || steps.farm_os.outcome == 'failure' || steps.ci_contracts.outcome == 'failure' || steps.security.outcome == 'failure' || steps.cloud_sync.outcome == 'failure' || steps.worker.outcome == 'failure')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           {
             echo "### Automated source/security gate failure"
             echo
+            if [ -f dependency-audit.log ]; then
+              echo "#### Dependency audit"
+              echo '```text'
+              tail -n 120 dependency-audit.log
+              echo '```'
+            fi
             if [ -f lint.log ]; then
               echo "#### Lint"
               echo '```text'
@@ -91,6 +109,18 @@ jobs:
               echo "#### Shell automation"
               echo '```text'
               tail -n 120 shell.log
+              echo '```'
+            fi
+            if [ -f farm-os.log ]; then
+              echo "#### Farm OS contracts"
+              echo '```text'
+              tail -n 120 farm-os.log
+              echo '```'
+            fi
+            if [ -f ci-workflow.log ]; then
+              echo "#### CI workflow contracts"
+              echo '```text'
+              tail -n 120 ci-workflow.log
               echo '```'
             fi
             if [ -f security.log ]; then
@@ -157,20 +187,33 @@ jobs:
           } > /tmp/build-comment.md
           gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/build-comment.md
 
+      - name: Cache Playwright browsers
+        if: success()
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-1.62.1
+
       - name: Install browser test runner
         if: success()
+        id: browser_install
         run: |
-          npm install --no-save @playwright/test@1.62.1
-          npm audit --audit-level=high
-          # The iPhone device profile uses WebKit while tablet/desktop use Chromium.
-          npx playwright install --with-deps chromium webkit
+          set -o pipefail
+          {
+            npm install --no-save @playwright/test@1.62.1
+            npm audit --audit-level=high
+            # The iPhone device profile uses WebKit while tablet/desktop use Chromium.
+            # Keep --with-deps even when browser binaries are cached so system requirements remain verified.
+            npx playwright install --with-deps chromium webkit
+          } 2>&1 | tee browser-install.log
 
       - name: Serve static export
         if: success()
+        id: serve
         run: |
-          python3 -m http.server 4173 --directory out > /tmp/farm-site-http.log 2>&1 &
+          python3 -m http.server 4173 --directory out > static-server.log 2>&1 &
           for i in {1..20}; do curl -fsS http://127.0.0.1:4173/ >/dev/null && exit 0; sleep 1; done
-          cat /tmp/farm-site-http.log
+          cat static-server.log
           exit 1
 
       - name: Responsive and interaction smoke tests
@@ -180,17 +223,32 @@ jobs:
           set -o pipefail
           npx playwright test --reporter=line 2>&1 | tee playwright.log
 
-      - name: Report browser-test failure
-        if: failure() && steps.browser.outcome == 'failure' && github.event_name == 'pull_request'
+      - name: Report browser-stage failure
+        if: failure() && github.event_name == 'pull_request' && (steps.browser_install.outcome == 'failure' || steps.serve.outcome == 'failure' || steps.browser.outcome == 'failure')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           {
             echo "### Automated browser gate failure"
             echo
-            echo '```text'
-            tail -n 180 playwright.log
-            echo '```'
+            if [ -f browser-install.log ]; then
+              echo "#### Browser installation"
+              echo '```text'
+              tail -n 180 browser-install.log
+              echo '```'
+            fi
+            if [ -f static-server.log ]; then
+              echo "#### Static export server"
+              echo '```text'
+              tail -n 120 static-server.log
+              echo '```'
+            fi
+            if [ -f playwright.log ]; then
+              echo "#### Browser tests"
+              echo '```text'
+              tail -n 180 playwright.log
+              echo '```'
+            fi
           } > /tmp/browser-comment.md
           gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/browser-comment.md
 
@@ -202,11 +260,16 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
           path: |
+            dependency-audit.log
             lint.log
             shell.log
+            farm-os.log
+            ci-workflow.log
             security.log
             cloud-sync.log
             build.log
+            browser-install.log
+            static-server.log
             playwright.log
             workers/farm-sync/worker-install.log
             workers/farm-sync/worker-test.log
