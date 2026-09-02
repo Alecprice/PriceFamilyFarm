@@ -5,7 +5,7 @@ async function openPrimaryNavIfCollapsed(page) {
   if (await menu.isVisible()) await menu.click();
 }
 
-test("primary navigation exposes recovered Farm OS planning tools", async ({ page }) => {
+test("primary navigation exposes public farm routes and one Farm OS doorway", async ({ page }) => {
   await page.goto("/");
   await openPrimaryNavIfCollapsed(page);
 
@@ -14,14 +14,37 @@ test("primary navigation exposes recovered Farm OS planning tools", async ({ pag
   await farm.click();
   await expect(nav.getByRole("link", { name: "Farm Journal", exact: true })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Season Timeline", exact: true })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Farm OS", exact: true })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Farm Inventory", exact: true })).toHaveCount(0);
 
   const plan = nav.getByRole("button", { name: /^Plan/ });
   await plan.click();
   await expect(nav.getByRole("link", { name: "Farm Planner", exact: true })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Farm Calendar", exact: true })).toBeVisible();
-  await expect(nav.getByRole("link", { name: "Garden Layout Builder", exact: true })).toBeVisible();
   await expect(nav.getByRole("link", { name: "Farm Map", exact: true })).toBeVisible();
+  await expect(nav.getByRole("link", { name: "Market Planner", exact: true })).toHaveCount(0);
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
+});
+
+test("Farm OS keeps private operating tools reachable after public nav cleanup", async ({ page }) => {
+  await page.goto("/farm-os/");
+
+  for (const name of [
+    "Open Farm Records",
+    "Open Farm Planner",
+    "Open Farm Calendar",
+    "Analytics",
+    "Funding",
+    "Open Farm Inventory",
+    "Open Plantings & Successions",
+    "Open Market Planner",
+    "Crop Profitability",
+    "Weekly Work Sheet",
+    "Data Health",
+    "Backup",
+  ]) {
+    await expect(page.getByRole("link", { name, exact: true }).first()).toBeVisible();
+  }
 });
