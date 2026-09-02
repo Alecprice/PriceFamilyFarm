@@ -70,6 +70,16 @@ const weather = read("components/WeatherPanel.jsx");
 expect(weather.includes('url.hostname !== "api.weather.gov"'), "NWS forecast redirect origin is allowlisted");
 expect(weather.includes("REQUEST_TIMEOUT_MS"), "NWS requests have a timeout");
 
+const qualityWorkflow = read(".github/workflows/quality.yml");
+const codeqlWorkflow = read(".github/workflows/codeql.yml");
+const checkoutNode24Pin = "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1";
+expect(qualityWorkflow.includes(checkoutNode24Pin), "quality workflow pins checkout v7.0.1 on the Node 24 action runtime");
+expect(codeqlWorkflow.includes(checkoutNode24Pin), "CodeQL workflow pins checkout v7.0.1 on the Node 24 action runtime");
+expect(qualityWorkflow.includes("actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0"), "quality workflow pins setup-node v7.0.0 on the Node 24 action runtime");
+expect(qualityWorkflow.includes("actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1"), "quality workflow pins upload-artifact v7.0.1 on the Node 24 action runtime");
+expect(!qualityWorkflow.includes("@11d5960a326750d5838078e36cf38b85af677262"), "quality workflow no longer pins the deprecated checkout v4 runtime");
+expect(!qualityWorkflow.includes("@49933ea5288caeca8642d1e84afbd3f7d6820020"), "quality workflow no longer pins the deprecated setup-node v4 runtime");
+
 const edgePolicy = JSON.parse(read("deploy/cloudfront-security-headers-policy.json"));
 const securityHeaders = edgePolicy.SecurityHeadersConfig || {};
 const csp = securityHeaders.ContentSecurityPolicy?.ContentSecurityPolicy || "";
@@ -128,7 +138,6 @@ expect(
   "public sitemap excludes private Garden Layout Builder"
 );
 
-
 expect(
   robots.includes('"/learn/garden-layout-builder"'),
   "robots disallows private Garden Layout Builder"
@@ -143,7 +152,7 @@ const publicPrivateRoutePairs = [
   { label: "harvest", route: "/harvest", publicFile: "app/harvest/page.js", privateFile: "app/farm-os/harvest/page.js" },
   { label: "farm journal", route: "/farm-journal", publicFile: "app/farm-journal/page.js", privateFile: "app/farm-os/journal/page.js" },
   { label: "season timeline", route: "/timeline", publicFile: "app/timeline/page.js", privateFile: "app/farm-os/timeline/page.js" },
-  { label: "farm calendar", route: "/farm-calendar", publicFile: "app/farm-calendar/page.js", privateFile: "app/farm-os/calendar/page.js" },
+  { label: "farm calendar", route: "/farm-calendar", publicFile: "app/farm-os/calendar/page.js", privateFile: "app/farm-os/calendar/page.js" },
   { label: "farm map", route: "/farm-map", publicFile: "app/farm-map/page.js", privateFile: "app/farm-os/map/page.js" },
   { label: "farm planner", route: "/farm-planner", publicFile: "app/farm-planner/page.js", privateFile: "app/farm-os/planner/page.js" },
 ];
