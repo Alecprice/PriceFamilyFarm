@@ -5,6 +5,7 @@ import GardenLayoutBuilder from "@/components/GardenLayoutBuilder";
 export const metadata = {
   title: "Garden Layout Builder · Price Family Farm",
   description: "A browser-local garden bed layout and area planning tool from Price Family Farm.",
+  robots: { index: false, follow: false },
 };
 
 export default function GardenLayoutBuilderPage() {
