@@ -31,20 +31,20 @@ test("primary navigation exposes public farm routes and one Farm OS doorway", as
 test("Farm OS keeps private operating tools reachable after public nav cleanup", async ({ page }) => {
   await page.goto("/farm-os/");
 
-  for (const name of [
-    "Open Farm Records",
-    "Open Farm Planner",
-    "Open Farm Calendar",
-    "Analytics",
-    "Funding",
-    "Open Farm Inventory",
-    "Open Plantings & Successions",
-    "Open Market Planner",
-    "Crop Profitability",
-    "Weekly Work Sheet",
-    "Data Health",
-    "Backup",
+  for (const href of [
+    "/farm-records",
+    "/farm-os/planner",
+    "/farm-os/calendar",
+    "/farm-analytics",
+    "/funding",
+    "/farm-inventory",
+    "/plantings",
+    "/market-planner",
+    "/crop-profitability",
+    "/weekly-work-sheet",
+    "/farm-data-health",
+    "/farm-backup",
   ]) {
-    await expect(page.getByRole("link", { name, exact: true }).first()).toBeVisible();
+    await expect(page.locator(`main a[href="${href}"]`).first()).toBeVisible();
   }
 });
