@@ -32,18 +32,18 @@ test("Farm OS keeps private operating tools reachable after public nav cleanup",
   await page.goto("/farm-os/");
 
   for (const href of [
-    "/farm-records",
-    "/farm-os/planner",
-    "/farm-os/calendar",
-    "/farm-analytics",
-    "/funding",
-    "/farm-inventory",
-    "/plantings",
-    "/market-planner",
-    "/crop-profitability",
-    "/weekly-work-sheet",
-    "/farm-data-health",
-    "/farm-backup",
+    "/farm-records/",
+    "/farm-os/planner/",
+    "/farm-os/calendar/",
+    "/farm-analytics/",
+    "/funding/",
+    "/farm-inventory/",
+    "/plantings/",
+    "/market-planner/",
+    "/crop-profitability/",
+    "/weekly-work-sheet/",
+    "/farm-data-health/",
+    "/farm-backup/",
   ]) {
     await expect(page.locator(`main a[href="${href}"]`).first()).toBeVisible();
   }
