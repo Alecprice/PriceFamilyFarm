@@ -187,13 +187,13 @@ jobs:
           } > /tmp/build-comment.md
           gh pr comment "${{ github.event.pull_request.number }}" --body-file /tmp/build-comment.md
 
-      - name: Cache Playwright browsers
+      - name: Restore Playwright browser cache
         if: success()
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        id: playwright_cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ runner.arch }}-1.62.1
-          save-always: true
 
       - name: Install browser test runner
         if: success()
@@ -207,6 +207,13 @@ jobs:
             # Keep --with-deps even when browser binaries are cached so system requirements remain verified.
             npx playwright install --with-deps chromium webkit
           } 2>&1 | tee browser-install.log
+
+      - name: Save Playwright browser cache
+        if: success() && steps.playwright_cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.playwright_cache.outputs.cache-primary-key }}
 
       - name: Serve static export
         if: success()
