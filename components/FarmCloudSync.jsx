@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  getPrePullRecoveryInfo,
   getSavedSyncEndpoint,
   getSessionSyncToken,
   listCloudFarmStores,
@@ -9,6 +10,7 @@ import {
   normalizeSyncEndpoint,
   pullCloudFarmStores,
   pushLocalFarmStores,
+  restorePrePullFarmStores,
   saveSyncEndpoint,
   setSessionSyncToken,
   testCloudConnection,
@@ -21,6 +23,21 @@ function friendlyCloudSyncError(message) {
   if (message === "pre_pull_snapshot_failed") {
     return "Cloud restore stopped before replacing anything because the browser could not save the pre-pull recovery snapshot. Free browser storage or export a local backup, then try again";
   }
+  if (message === "cloud_restore_write_failed") {
+    return "Cloud restore could not write the complete validated set to browser storage, so the stores already changed during this attempt were rolled back to their pre-pull values";
+  }
+  if (message === "cloud_restore_rollback_failed") {
+    return "Cloud restore hit a browser-storage failure and automatic rollback could not fully restore every value. The pre-pull recovery snapshot is still available below";
+  }
+  if (message === "pre_pull_recovery_missing") {
+    return "No valid pre-pull recovery snapshot is available in this browser";
+  }
+  if (message === "pre_pull_recovery_write_failed") {
+    return "The saved pre-pull snapshot could not be fully restored, so any values changed during this recovery attempt were rolled back";
+  }
+  if (message === "pre_pull_recovery_rollback_failed") {
+    return "The saved pre-pull snapshot hit a browser-storage failure and automatic rollback could not fully restore every value";
+  }
   return message;
 }
 
@@ -30,7 +47,13 @@ export default function FarmCloudSync() {
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [confirmation, setConfirmation] = useState("");
+  const [recoveryConfirmation, setRecoveryConfirmation] = useState("");
+  const [recovery, setRecovery] = useState(null);
   const [cloudCount, setCloudCount] = useState(null);
+
+  useEffect(() => {
+    setRecovery(getPrePullRecoveryInfo());
+  }, []);
 
   const inventory = localSyncInventory();
   const presentCount = inventory.filter((item) => item.present).length;
@@ -88,7 +111,22 @@ export default function FarmCloudSync() {
         ? `Restored ${result.restored} validated cloud data areas to this browser. A local pre-pull recovery snapshot was saved first.`
         : "No cloud Farm OS data was available to restore.";
     });
+    setRecovery(getPrePullRecoveryInfo());
   }
+
+  async function recoverPrePull() {
+    if (recoveryConfirmation !== "RECOVER") return;
+    await run("Pre-pull recovery", async () => {
+      const result = restorePrePullFarmStores();
+      setRecoveryConfirmation("");
+      return `Recovered ${result.restored} prior Farm OS data ${result.restored === 1 ? "area" : "areas"}${result.removed ? ` and removed ${result.removed} ${result.removed === 1 ? "area" : "areas"} that did not exist before the cloud pull` : ""}.`;
+    });
+    setRecovery(getPrePullRecoveryInfo());
+  }
+
+  const recoveryTimestamp = recovery?.createdAt
+    ? new Date(recovery.createdAt).toLocaleString()
+    : "the most recent cloud pull";
 
   return (
     <div className="farm-tools-shell">
@@ -181,6 +219,40 @@ export default function FarmCloudSync() {
             Pull validated cloud data to this browser
           </button>
         </div>
+      </section>
+
+      <section className="farm-panel" aria-labelledby="cloud-sync-recovery-heading">
+        <span className="eyebrow">Recovery</span>
+        <h2 id="cloud-sync-recovery-heading">Return to the browser state from before the last cloud pull.</h2>
+        {recovery ? (
+          <>
+            <p>
+              A validated recovery snapshot from <strong>{recoveryTimestamp}</strong> covers {recovery.affectedCount} Farm OS data {recovery.affectedCount === 1 ? "area" : "areas"}. It can restore {recovery.storeCount} prior {recovery.storeCount === 1 ? "value" : "values"}{recovery.absentCount ? ` and remove ${recovery.absentCount} ${recovery.absentCount === 1 ? "area" : "areas"} that were absent before that pull` : ""}.
+            </p>
+            <div className="farm-field" style={{ maxWidth: 420 }}>
+              <label htmlFor="cloud-recovery-confirmation">Type RECOVER to restore the pre-pull browser state</label>
+              <input
+                id="cloud-recovery-confirmation"
+                value={recoveryConfirmation}
+                onChange={(event) => setRecoveryConfirmation(event.target.value.toUpperCase().slice(0, 7))}
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+            <div className="farm-actions">
+              <button
+                className="farm-action danger"
+                type="button"
+                disabled={busy || recoveryConfirmation !== "RECOVER"}
+                onClick={recoverPrePull}
+              >
+                Restore pre-pull browser state
+              </button>
+            </div>
+          </>
+        ) : (
+          <p>No valid pre-pull recovery snapshot is stored in this browser yet. One is created before the next cloud pull that has validated cloud data to restore.</p>
+        )}
       </section>
 
       {status ? <div className="farm-tools-note" role="status">{status}</div> : null}
