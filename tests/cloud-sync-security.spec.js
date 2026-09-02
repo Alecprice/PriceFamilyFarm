@@ -19,16 +19,29 @@ test("private cloud sync page is noindex and keeps its token out of local storag
   expect(storage.session.some((value) => String(value).includes(storage.secret))).toBe(true);
 });
 
-test("cloud restore requires explicit PULL confirmation", async ({ page }) => {
+test("unconfigured builds refuse arbitrary HTTPS sync destinations", async ({ page }) => {
   await page.goto("/farm-os/cloud-sync/");
 
   const button = page.getByRole("button", { name: "Pull validated cloud data to this browser" });
   await expect(button).toBeDisabled();
+  await expect(page.getByText(/Production sync is disabled until NEXT_PUBLIC_FARM_SYNC_ENDPOINT is configured/)).toBeVisible();
 
-  await page.getByLabel("Cloud sync endpoint").fill("https://example.workers.dev");
+  await page.getByLabel("Local development endpoint").fill("https://example.workers.dev");
   await page.getByLabel("Private sync token").fill("not-a-real-token");
   await page.getByLabel("Type PULL to replace matching browser data").fill("PULL");
 
+  await expect(button).toBeDisabled();
+});
+
+test("cloud restore requires explicit PULL confirmation on an allowed loopback endpoint", async ({ page }) => {
+  await page.goto("/farm-os/cloud-sync/");
+
+  const button = page.getByRole("button", { name: "Pull validated cloud data to this browser" });
+  await page.getByLabel("Local development endpoint").fill("http://localhost:8787");
+  await page.getByLabel("Private sync token").fill("not-a-real-token");
+  await expect(button).toBeDisabled();
+
+  await page.getByLabel("Type PULL to replace matching browser data").fill("PULL");
   await expect(button).toBeEnabled();
 });
 
