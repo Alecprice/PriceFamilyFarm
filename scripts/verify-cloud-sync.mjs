@@ -34,7 +34,10 @@ expect(migration.includes("small-water-25690282"), "versioned migration records 
 expect(!migration.includes("postgresql://") && !migration.includes("postgres://"), "versioned migration contains no database credential URI");
 expect(migration002.includes("CREATE OR REPLACE FUNCTION public.pff_put_document"), "follow-up migration replaces the document write function safely");
 expect(migration002.includes("pg_advisory_xact_lock"), "follow-up migration serializes first-write races before document lookup");
-expect(migration002.indexOf("pg_advisory_xact_lock") < migration002.indexOf("FOR UPDATE"), "advisory lock is acquired before row lookup");
+const advisoryLockIndex = migration002.indexOf("PERFORM pg_advisory_xact_lock(");
+const rowLookupIndex = migration002.indexOf("SELECT *", advisoryLockIndex);
+const rowLockIndex = migration002.indexOf("FOR UPDATE", rowLookupIndex);
+expect(advisoryLockIndex >= 0 && rowLookupIndex > advisoryLockIndex && rowLockIndex > rowLookupIndex, "advisory lock is acquired before the actual document row lookup and row lock");
 expect(migration002.includes("'version', 2"), "follow-up migration advances the cloud-sync schema version");
 expect(!migration002.includes("postgresql://") && !migration002.includes("postgres://"), "follow-up migration contains no database credential URI");
 
