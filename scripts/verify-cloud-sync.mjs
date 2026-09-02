@@ -58,6 +58,12 @@ expect(client.includes('url.pathname && url.pathname !== "/"'), "sync endpoint r
 const allowedEndpointCheck = client.indexOf("const allowedEndpoint = resolveAllowedSyncEndpoint(endpoint)");
 const allowedEndpointFetch = client.indexOf("await fetch(`${allowedEndpoint}${path}`", allowedEndpointCheck);
 expect(allowedEndpointCheck >= 0 && allowedEndpointFetch > allowedEndpointCheck, "bearer-token requests resolve the trusted endpoint before fetch");
+expect(client.includes("REQUEST_TIMEOUT_MS = 30_000"), "Cloud Sync requests have a bounded 30-second client timeout");
+expect(client.includes("new AbortController()"), "Cloud Sync request timeout uses AbortController");
+expect(client.includes('throw new Error("request_timeout")'), "Cloud Sync maps aborted requests to a stable timeout error");
+expect(component.includes("timed out after 30 seconds"), "Cloud Sync UI explains request timeouts and in-flight uncertainty");
+expect(client.includes("partial_upload:"), "Cloud Sync preserves structured partial-upload progress when later requests fail");
+expect(component.includes("Completed revision checkpoints were preserved"), "Cloud Sync UI explains that completed partial-upload checkpoints remain durable");
 expect(component.includes("Production builds only send that token to the configured Farm OS sync origin"), "Cloud Sync UI explains the production token destination lock");
 expect(component.includes("This development field accepts loopback origins only"), "unconfigured builds explain their loopback-only development boundary");
 expect(component.includes("cloud schema is not ready at the required version"), "Cloud Sync UI explains a blocked stale or incomplete database schema");
@@ -88,6 +94,8 @@ const revisionCheckpoint = client.indexOf("writeRevisionMap(revisions)", revisio
 const uploadIncrement = client.indexOf("result.uploaded += 1", revisionAssignment);
 expect(nextRevisionCheck >= 0 && revisionAssignment > nextRevisionCheck, "successful cloud pushes validate the returned server revision before recording it");
 expect(revisionCheckpoint > revisionAssignment && revisionCheckpoint < uploadIncrement, "successful cloud pushes checkpoint each validated server revision before continuing");
+const partialFailureIndex = client.indexOf("partialUploadFailure(result, store, error)");
+expect(partialFailureIndex > uploadIncrement, "later upload failures preserve already-checkpointed progress instead of erasing it from the result path");
 expect(client.includes("validFarmStoreValue"), "cloud restores validate store payloads");
 expect(registry.includes("pff.growingJourney.v1"), "shared allowlist includes Growing Journey");
 expect(registry.includes("new TextEncoder().encode(value).byteLength"), "shared Farm OS store limits are measured in encoded bytes");
