@@ -64,7 +64,14 @@ const uploadIncrement = client.indexOf("result.uploaded += 1", revisionAssignmen
 expect(revisionAssignment >= 0 && revisionCheckpoint > revisionAssignment && revisionCheckpoint < uploadIncrement, "successful cloud pushes checkpoint each server revision before continuing");
 expect(client.includes("validFarmStoreValue"), "cloud restores validate store payloads");
 expect(registry.includes("pff.growingJourney.v1"), "shared allowlist includes Growing Journey");
+expect(registry.includes("new TextEncoder().encode(value).byteLength"), "shared Farm OS store limits are measured in encoded bytes");
 expect(backup.includes("FARM_STORES"), "local backup uses the shared store allowlist");
+expect(backup.includes("utf8Bytes(snapshotRaw)"), "local restore recovery snapshots are measured in encoded bytes");
+expect(backup.includes('throw new Error("pre_restore_snapshot_too_large")'), "local file restore aborts when its recovery snapshot is too large");
+expect(backup.includes('throw new Error("pre_restore_snapshot_failed")'), "local file restore aborts when its recovery snapshot cannot be saved");
+expect(backup.includes('applyLocalBatch(changes, "local_restore")'), "local file restore uses rollback-aware browser storage batches");
+expect(backup.includes("version: 2"), "local file restore snapshots preserve prior absence state");
+expect(backup.includes("Restore pre-file-restore browser state"), "local backup UI exposes a pre-restore recovery action");
 expect(worker.includes("env.DATABASE_URL"), "Worker keeps Neon connection in server environment");
 expect(worker.includes("PFF_SYNC_TOKEN"), "Worker requires a private sync token");
 expect(worker.includes("pff_put_document"), "Worker uses revision-aware Neon write function");
