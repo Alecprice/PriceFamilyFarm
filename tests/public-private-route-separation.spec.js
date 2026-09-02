@@ -20,6 +20,12 @@ for (const [label, publicPath, privatePath] of ROUTES) {
   test(`${label} keeps public and Farm OS routes separate`, async ({ page }) => {
     await page.goto(publicPath);
     expect(await robotsValue(page)).not.toContain("noindex");
+
+    const main = page.getByRole("main");
+    await expect(main).toHaveCount(1);
+    await expect(main).toHaveAttribute("id", "main-content");
+    await expect(main).toHaveAttribute("tabindex", "-1");
+
     await page.goto(privatePath);
     expect(await robotsValue(page)).toContain("noindex");
   });
