@@ -60,6 +60,8 @@ const allowedEndpointFetch = client.indexOf("await fetch(`${allowedEndpoint}${pa
 expect(allowedEndpointCheck >= 0 && allowedEndpointFetch > allowedEndpointCheck, "bearer-token requests resolve the trusted endpoint before fetch");
 expect(component.includes("Production builds only send that token to the configured Farm OS sync origin"), "Cloud Sync UI explains the production token destination lock");
 expect(component.includes("This development field accepts loopback origins only"), "unconfigured builds explain their loopback-only development boundary");
+expect(component.includes("cloud schema is not ready at the required version"), "Cloud Sync UI explains a blocked stale or incomplete database schema");
+expect(component.includes("integrity checksum did not match"), "Cloud Sync UI explains integrity failures without implying data was replaced");
 expect(client.includes("PRE_PULL_KEY"), "cloud pull preserves a pre-pull local recovery snapshot");
 expect(client.includes('throw new Error("pre_pull_snapshot_too_large")'), "cloud pull aborts when a safe recovery snapshot exceeds its size limit");
 expect(client.includes('throw new Error("pre_pull_snapshot_failed")'), "cloud pull aborts when browser storage cannot save the recovery snapshot");
@@ -109,7 +111,17 @@ expect(worker.includes("Object.keys(value).sort()"), "Worker canonicalizes JSON 
 expect(worker.includes("CHECKSUM_PATTERN"), "Worker requires a SHA-256 shaped checksum");
 expect(worker.includes('return json(env, { error: "invalid_checksum" }, 400);'), "Worker rejects payload/checksum mismatches before database writes");
 expect(worker.includes('return json(env, { error: "invalid_source_device_key" }, 400);'), "Worker requires source-device metadata before database writes");
-expect(worker.includes("schemaVersion !== 1"), "Worker rejects unsupported Cloud Sync schema versions");
+expect(worker.includes("schemaVersion !== 1"), "Worker rejects unsupported Cloud Sync document schema versions");
+expect(worker.includes('EXPECTED_SCHEMA_NAME = "price-family-farm-cloud-sync"'), "Worker requires the Price Family Farm Cloud Sync schema identity");
+expect(worker.includes("EXPECTED_SCHEMA_VERSION = 2"), "Worker requires migration schema version 2 before data access");
+expect(worker.includes('EXPECTED_PROJECT_ID = "small-water-25690282"'), "Worker pins readiness to the dedicated Price Family Farm Neon project identity");
+expect(worker.includes('error: "schema_not_ready"'), "Worker reports stale or incomplete Cloud Sync schema as unavailable");
+const schemaGuardCount = worker.split("if (!schemaReady(schema)) return schemaNotReady(env, schema);").length - 1;
+expect(schemaGuardCount >= 4, "Worker enforces schema readiness for health, list, document reads, and document writes");
+const bodyParseIndex = worker.indexOf("body = JSON.parse(raw)");
+const putSchemaIndex = worker.lastIndexOf("const schema = await readSchema(sql)");
+const putFunctionIndex = worker.indexOf("SELECT pff_put_document(", putSchemaIndex);
+expect(bodyParseIndex >= 0 && putSchemaIndex > bodyParseIndex && putFunctionIndex > putSchemaIndex, "Worker validates PUT bodies before the schema query and still checks readiness before the database write");
 expect(!worker.includes("NEXT_PUBLIC_DATABASE_URL"), "Worker does not expose a public database variable");
 
 expect(rootReadme.includes("Private Farm OS records remain **local-first**"), "root documentation describes Farm OS as local-first instead of falsely backend-free");
