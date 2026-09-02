@@ -12,8 +12,10 @@ export default function FarmMapPage() {
     <>
       <Nav />
       <header className="page-head"><div className="wrap"><span className="eyebrow on-dark">Farm Map</span><h1>One small farm, several connected growing systems.</h1><p>This diagram shows how the farm is organized without publishing the residence or an exact property layout. Tap an area to see what it does.</p></div></header>
-      <section><div className="wrap"><FarmMapExplorer /></div></section>
-      <section className="bg-cream bg-line-top"><div className="wrap"><div className="section-head"><span className="eyebrow">Next layer</span><h2>Eventually every tree, bed, and crop can have a record.</h2><p>The data model is ready to grow from broad areas into individual trees, berry rows, containers, and raised beds as those records are collected.</p></div></div></section>
+      <main id="main-content" tabIndex={-1}>
+        <section><div className="wrap"><FarmMapExplorer /></div></section>
+        <section className="bg-cream bg-line-top"><div className="wrap"><div className="section-head"><span className="eyebrow">Next layer</span><h2>Eventually every tree, bed, and crop can have a record.</h2><p>The data model is ready to grow from broad areas into individual trees, berry rows, containers, and raised beds as those records are collected.</p></div></div></section>
+      </main>
       <Footer />
     </>
   );
