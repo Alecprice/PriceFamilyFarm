@@ -27,6 +27,31 @@ function friendlyCloudSyncError(message) {
   if (message === "token_required") {
     return "Enter the private sync token before connecting";
   }
+  if (message === "request_timeout") {
+    return "The cloud sync request timed out after 30 seconds. The in-flight data area may have reached the server. On retry, an identical verified cloud copy is safely revision-checkpointed; a genuinely different newer copy remains a conflict and is never overwritten silently";
+  }
+  if (message.startsWith("partial_upload:")) {
+    try {
+      const detail = JSON.parse(message.slice("partial_upload:".length));
+      const uploaded = Number(detail.uploaded || 0);
+      const alreadyCurrent = Number(detail.alreadyCurrent || 0);
+      const conflicts = Number(detail.conflicts || 0);
+      const label = typeof detail.storeLabel === "string" ? detail.storeLabel : "the next data area";
+      const cause = typeof detail.cause === "string" ? friendlyCloudSyncError(detail.cause) : "The next request failed";
+      const uploadSummary = uploaded === 1
+        ? "1 data area was uploaded"
+        : `${uploaded} data areas were uploaded`;
+      const alreadyCurrentSummary = alreadyCurrent
+        ? ` ${alreadyCurrent} already-matching cloud ${alreadyCurrent === 1 ? "copy was" : "copies were"} verified and revision-checkpointed.`
+        : "";
+      const conflictSummary = conflicts
+        ? ` ${conflicts} conflict${conflicts === 1 ? "" : "s"} had already been left untouched.`
+        : "";
+      return `${uploadSummary} before the next request stopped while syncing ${label}.${alreadyCurrentSummary}${conflictSummary} Completed revision checkpoints were preserved. The in-flight area may have reached the server; an identical verified retry can reconcile automatically, while a different cloud copy remains protected as a conflict. ${cause}`;
+    } catch {
+      return "Cloud upload stopped after partial progress. Completed revision checkpoints were preserved, so retrying remains conflict-safe";
+    }
+  }
   if (message === "schema_not_ready") {
     return "The dedicated Price Family Farm cloud schema is not ready at the required version. Verify the database target and apply only confirmed-missing migrations before syncing";
   }
@@ -123,10 +148,16 @@ export default function FarmCloudSync() {
     await run("Cloud upload", async () => {
       const config = persistConnection();
       const result = await pushLocalFarmStores(config.endpoint, config.token);
+      const alreadyCurrent = result.alreadyCurrent || 0;
+      const alreadyCurrentSummary = alreadyCurrent
+        ? ` ${alreadyCurrent} already-matching cloud ${alreadyCurrent === 1 ? "copy was" : "copies were"} verified and revision-checkpointed.`
+        : "";
       if (result.conflicts.length) {
-        return `Uploaded ${result.uploaded} data areas. ${result.conflicts.length} conflict${result.conflicts.length === 1 ? "" : "s"} were left untouched; pull the cloud copy before deciding what to keep.`;
+        const conflictCount = result.conflicts.length;
+        const conflictVerb = conflictCount === 1 ? "was" : "were";
+        return `Uploaded ${result.uploaded} data areas.${alreadyCurrentSummary} ${conflictCount} conflict${conflictCount === 1 ? "" : "s"} ${conflictVerb} left untouched; pull the cloud copy before deciding what to keep.`;
       }
-      return `Uploaded ${result.uploaded} valid browser data areas. ${result.skipped} empty or invalid areas were skipped.`;
+      return `Uploaded ${result.uploaded} valid browser data areas.${alreadyCurrentSummary} ${result.skipped} empty or invalid areas were skipped.`;
     });
   }
 
@@ -219,7 +250,7 @@ export default function FarmCloudSync() {
       <section className="farm-panel" aria-labelledby="cloud-sync-upload-heading">
         <span className="eyebrow">Browser → cloud</span>
         <h2 id="cloud-sync-upload-heading">Back up validated Farm OS data.</h2>
-        <p>{presentCount} of {inventory.length} allowed data areas currently contain valid browser-local data. Uploads use canonical integrity checksums and revision guards, so corrupted payloads and newer cloud copies are not silently accepted or overwritten.</p>
+        <p>{presentCount} of {inventory.length} allowed data areas currently contain valid browser-local data. Uploads use canonical integrity checksums and revision guards, so corrupted payloads and newer cloud copies are not silently accepted or overwritten. If a multi-area upload is interrupted, completed revision checkpoints are preserved and partial progress is reported explicitly. A retry can safely adopt an already-matching verified cloud revision without requiring a destructive pull.</p>
         <div className="farm-actions">
           <button
             className="farm-action"
