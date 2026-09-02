@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react";
 import {
+  getConfiguredSyncEndpoint,
   getPrePullRecoveryInfo,
   getSavedSyncEndpoint,
   getSessionSyncToken,
   listCloudFarmStores,
   localSyncInventory,
-  normalizeSyncEndpoint,
   pullCloudFarmStores,
   pushLocalFarmStores,
+  resolveAllowedSyncEndpoint,
   restorePrePullFarmStores,
   saveSyncEndpoint,
   setSessionSyncToken,
@@ -17,6 +18,15 @@ import {
 } from "@/lib/farmCloudSync";
 
 function friendlyCloudSyncError(message) {
+  if (message === "endpoint_not_allowed") {
+    return "The sync request was blocked before sending the private token because the destination is not the configured Farm OS sync service";
+  }
+  if (message === "endpoint_not_configured") {
+    return "Production cloud sync is not configured in this build. Only a loopback endpoint can be used for local development";
+  }
+  if (message === "token_required") {
+    return "Enter the private sync token before connecting";
+  }
   if (message === "pre_pull_snapshot_too_large") {
     return "Cloud restore stopped before replacing anything because this browser has too much Farm OS data to capture a safe pre-pull recovery snapshot. Export a local backup first, then try again";
   }
@@ -57,7 +67,8 @@ export default function FarmCloudSync() {
 
   const inventory = localSyncInventory();
   const presentCount = inventory.filter((item) => item.present).length;
-  const readyEndpoint = normalizeSyncEndpoint(endpoint);
+  const configuredEndpoint = getConfiguredSyncEndpoint();
+  const readyEndpoint = resolveAllowedSyncEndpoint(endpoint);
 
   function persistConnection() {
     const saved = saveSyncEndpoint(endpoint);
@@ -131,25 +142,34 @@ export default function FarmCloudSync() {
   return (
     <div className="farm-tools-shell">
       <div className="farm-tools-note">
-        <strong>Private sync bridge.</strong> The Neon database password never enters this page. The sync token is kept in session storage only, so closing the browser session removes it. The API endpoint may be remembered locally.
+        <strong>Private sync bridge.</strong> The Neon database password never enters this page. The sync token is kept in session storage only, so closing the browser session removes it. Production builds only send that token to the configured Farm OS sync origin.
       </div>
 
       <section className="farm-panel" aria-labelledby="cloud-sync-connect-heading">
         <span className="eyebrow">Connection</span>
         <h2 id="cloud-sync-connect-heading">Connect this trusted device.</h2>
-        <div className="farm-field">
-          <label htmlFor="farm-cloud-endpoint">Cloud sync endpoint</label>
-          <input
-            id="farm-cloud-endpoint"
-            type="url"
-            inputMode="url"
-            placeholder="https://price-family-farm-cloud-sync.example.workers.dev"
-            value={endpoint}
-            onChange={(event) => setEndpoint(event.target.value)}
-            autoComplete="off"
-            spellCheck={false}
-          />
-        </div>
+        {configuredEndpoint ? (
+          <div className="farm-field">
+            <span>Cloud sync endpoint</span>
+            <code>{configuredEndpoint}</code>
+            <small>The production destination is locked at build time so the private token cannot be sent to an arbitrary host.</small>
+          </div>
+        ) : (
+          <div className="farm-field">
+            <label htmlFor="farm-cloud-endpoint">Local development endpoint</label>
+            <input
+              id="farm-cloud-endpoint"
+              type="url"
+              inputMode="url"
+              placeholder="http://localhost:8787"
+              value={endpoint}
+              onChange={(event) => setEndpoint(event.target.value)}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <small>Production sync is disabled until NEXT_PUBLIC_FARM_SYNC_ENDPOINT is configured. This development field accepts loopback origins only.</small>
+          </div>
+        )}
         <div className="farm-field">
           <label htmlFor="farm-cloud-token">Private sync token</label>
           <input
