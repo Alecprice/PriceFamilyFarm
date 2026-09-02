@@ -15,6 +15,7 @@ const checks = [
   ["Playwright browser cache uses pinned actions/cache", "actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0"],
   ["Playwright browser cache targets the browser store", "path: ~/.cache/ms-playwright"],
   ["Playwright browser cache key is versioned", "key: playwright-${{ runner.os }}-${{ runner.arch }}-1.62.1"],
+  ["Playwright browser cache saves after later failures", "save-always: true"],
   ["browser install has a step id", "id: browser_install"],
   ["browser installation is captured for diagnostics", "browser-install.log"],
   ["static export server has a step id", "id: serve"],
