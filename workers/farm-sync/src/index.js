@@ -2,6 +2,7 @@ import { neon } from "@neondatabase/serverless";
 
 const MAX_BODY_BYTES = 5_000_000;
 const KEY_PATTERN = /^[A-Za-z0-9._:-]{1,200}$/;
+const CHECKSUM_PATTERN = /^[a-f0-9]{64}$/;
 
 const ALLOWED_DOCUMENT_KEYS = new Set([
   "records",
@@ -55,6 +56,27 @@ function constantTimeTokenMatch(header, token) {
     mismatch |= header.charCodeAt(index) ^ expected.charCodeAt(index);
   }
   return mismatch === 0;
+}
+
+function stableJsonStringify(value) {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableJsonStringify(item)).join(",")}]`;
+  }
+  const keys = Object.keys(value).sort();
+  return `{${keys
+    .map((key) => `${JSON.stringify(key)}:${stableJsonStringify(value[key])}`)
+    .join(",")}}`;
+}
+
+async function payloadChecksum(value) {
+  const serialized = stableJsonStringify(value);
+  if (typeof serialized !== "string") throw new Error("invalid_payload");
+  const bytes = new TextEncoder().encode(serialized);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 async function readBoundedBody(request) {
@@ -209,27 +231,34 @@ const worker = {
           return json(env, { error: "invalid_body" }, 400);
         }
 
-        const schemaVersion = Number(body.schemaVersion ?? 1);
-        const expectedRevision =
-          body.expectedRevision == null ? null : Number(body.expectedRevision);
+        const schemaVersion = Number(body.schemaVersion);
+        const expectedRevision = Number(body.expectedRevision);
         const checksum =
-          typeof body.checksum === "string" ? body.checksum.slice(0, 200) : null;
+          typeof body.checksum === "string"
+            ? body.checksum.trim().toLowerCase()
+            : "";
         const sourceDeviceKey =
           typeof body.sourceDeviceKey === "string"
-            ? body.sourceDeviceKey.slice(0, 200)
-            : null;
+            ? body.sourceDeviceKey.trim()
+            : "";
 
-        if (!Number.isInteger(schemaVersion) || schemaVersion < 1) {
+        if (schemaVersion !== 1) {
           return json(env, { error: "invalid_schema_version" }, 400);
         }
-        if (
-          expectedRevision !== null &&
-          (!Number.isInteger(expectedRevision) || expectedRevision < 0)
-        ) {
+        if (!Number.isInteger(expectedRevision) || expectedRevision < 0) {
           return json(env, { error: "invalid_expected_revision" }, 400);
         }
         if (!Object.prototype.hasOwnProperty.call(body, "payload")) {
           return json(env, { error: "payload_required" }, 400);
+        }
+        if (!sourceDeviceKey || sourceDeviceKey.length > 200) {
+          return json(env, { error: "invalid_source_device_key" }, 400);
+        }
+        if (
+          !CHECKSUM_PATTERN.test(checksum) ||
+          checksum !== (await payloadChecksum(body.payload))
+        ) {
+          return json(env, { error: "invalid_checksum" }, 400);
         }
 
         const resultRows = await sql`
