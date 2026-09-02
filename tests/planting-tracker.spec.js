@@ -31,7 +31,12 @@ test("planting tracker persists production timing and links matching harvest rec
   await page.getByLabel("Number planted", { exact: true }).fill("12");
   await page.getByLabel("Spacing (inches)", { exact: true }).fill("18");
   await page.getByLabel("Next succession date", { exact: true }).fill(successionDate);
-  await page.getByRole("button", { name: "Save planting", exact: true }).click();
+
+  // Keyboard activation exercises the same native submit path without racing the site's
+  // intentional smooth scrolling on the small-phone WebKit profile.
+  const saveButton = page.getByRole("button", { name: "Save planting", exact: true });
+  await saveButton.focus();
+  await saveButton.press("Enter");
 
   await expect(page.getByRole("status")).toContainText("Tomato planting saved for Bed A.");
   const plantingBoard = page.getByRole("region", { name: "Connect timing, space, and actual harvest records." });
