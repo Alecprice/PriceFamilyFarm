@@ -69,7 +69,9 @@ test("Farm OS backup records backup age metadata and preserves a pre-restore sna
     snapshot: JSON.parse(localStorage.getItem("price-family-farm-pre-restore-snapshot-v1")),
   }));
   expect(restored.inventory[0].quantity).toBe("8");
+  expect(restored.snapshot.version).toBe(2);
   expect(restored.snapshot.reason).toBe("before-restore");
   expect(restored.snapshot.stores.inventory[0].quantity).toBe("2");
-  await expect(page.getByRole("status")).toContainText("pre-restore local snapshot");
+  expect(restored.snapshot.absent).toEqual([]);
+  await expect(page.getByRole("status")).toContainText("pre-restore recovery snapshot was saved first");
 });
