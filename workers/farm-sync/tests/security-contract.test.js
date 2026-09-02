@@ -87,6 +87,18 @@ describe("Farm OS cloud sync request boundary", () => {
     expect(denied.status).toBe(403);
   });
 
+  it("fails closed when the preflight allowed origin is not configured", async () => {
+    const response = await worker.fetch(
+      new Request("https://sync.example/v1/documents", {
+        method: "OPTIONS",
+        headers: { Origin: allowedOrigin },
+      }),
+      {},
+    );
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
+  });
+
   it("rejects a disallowed request origin before configuration or database access", async () => {
     const response = await worker.fetch(
       new Request("https://sync.example/health", {
@@ -109,6 +121,23 @@ describe("Farm OS cloud sync request boundary", () => {
     expect(await readJson(response)).toEqual({ error: "server_not_configured" });
   });
 
+  it("requires the allowed production origin even for non-browser clients", async () => {
+    const response = await worker.fetch(
+      new Request("https://sync.example/health", {
+        headers: {
+          Authorization: `Bearer ${configuredEnv.PFF_SYNC_TOKEN}`,
+        },
+      }),
+      {
+        DATABASE_URL: configuredEnv.DATABASE_URL,
+        PFF_SYNC_TOKEN: configuredEnv.PFF_SYNC_TOKEN,
+      },
+    );
+    expect(response.status).toBe(503);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
+    expect(await readJson(response)).toEqual({ error: "server_not_configured" });
+  });
+
   it("rejects an invalid bearer token before database access", async () => {
     const response = await worker.fetch(
       new Request("https://sync.example/health", {
@@ -123,8 +152,12 @@ describe("Farm OS cloud sync request boundary", () => {
     expect(await readJson(response)).toEqual({ error: "unauthorized" });
   });
 
-  it("rejects encoded or unapproved document keys without querying the database", async () => {
-    for (const path of ["/v1/documents/not%2Fallowed", "/v1/documents/admin"]) {
+  it("rejects malformed, encoded, or unapproved document keys without querying the database", async () => {
+    for (const path of [
+      "/v1/documents/%E0%A4%A",
+      "/v1/documents/not%2Fallowed",
+      "/v1/documents/admin",
+    ]) {
       const response = await worker.fetch(
         new Request(`https://sync.example${path}`, {
           headers: authorizedHeaders(),
