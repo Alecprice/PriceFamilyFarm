@@ -18,14 +18,22 @@ const ALLOWED_DOCUMENT_KEYS = new Set([
   "market",
 ]);
 
+function allowedOrigin(env) {
+  return typeof env.PFF_ALLOWED_ORIGIN === "string"
+    ? env.PFF_ALLOWED_ORIGIN.trim()
+    : "";
+}
+
 function cors(env) {
-  return {
-    "Access-Control-Allow-Origin": env.PFF_ALLOWED_ORIGIN,
+  const headers = {
     "Access-Control-Allow-Headers": "Authorization, Content-Type",
     "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };
+  const origin = allowedOrigin(env);
+  if (origin) headers["Access-Control-Allow-Origin"] = origin;
+  return headers;
 }
 
 function json(env, value, status = 200) {
@@ -96,19 +104,23 @@ async function currentFarmId(sql) {
 const worker = {
   async fetch(request, env) {
     const origin = request.headers.get("Origin");
+    const configuredOrigin = allowedOrigin(env);
 
     if (request.method === "OPTIONS") {
-      if (origin && origin !== env.PFF_ALLOWED_ORIGIN) {
+      if (!configuredOrigin) {
+        return new Response(null, { status: 503, headers: cors(env) });
+      }
+      if (origin && origin !== configuredOrigin) {
         return new Response(null, { status: 403 });
       }
       return new Response(null, { status: 204, headers: cors(env) });
     }
 
-    if (origin && origin !== env.PFF_ALLOWED_ORIGIN) {
+    if (origin && origin !== configuredOrigin) {
       return json(env, { error: "origin_not_allowed" }, 403);
     }
 
-    if (!env.DATABASE_URL || !env.PFF_SYNC_TOKEN) {
+    if (!configuredOrigin || !env.DATABASE_URL || !env.PFF_SYNC_TOKEN) {
       return json(env, { error: "server_not_configured" }, 503);
     }
 
@@ -153,7 +165,12 @@ const worker = {
       const match = /^\/v1\/documents\/([^/]+)$/.exec(url.pathname);
       if (!match) return json(env, { error: "not_found" }, 404);
 
-      const key = decodeURIComponent(match[1]);
+      let key;
+      try {
+        key = decodeURIComponent(match[1]);
+      } catch {
+        return json(env, { error: "invalid_document_key" }, 400);
+      }
       if (!KEY_PATTERN.test(key) || !ALLOWED_DOCUMENT_KEYS.has(key)) {
         return json(env, { error: "invalid_document_key" }, 400);
       }
