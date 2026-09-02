@@ -1,5 +1,8 @@
+import Image from "next/image";
 import Nav from "@/components/Nav";
 import Footer from "@/components/Footer";
+import farmNameRegistration from "@/public/images/documents/farm-name-registration.webp";
+import masterFarmManager from "@/public/images/documents/master-farm-manager.webp";
 
 export const metadata = {
   title: "Documentation · Price Family Farm",
@@ -133,7 +136,6 @@ export default function Documentation() {
         </div>
       </section>
 
-
       <section className="bg-cream bg-line-top">
         <div className="wrap">
           <div className="section-head">
@@ -148,10 +150,10 @@ export default function Documentation() {
 
           <div className="grid-2">
             <article className="packet">
-              <img
-                src="/images/documents/farm-name-registration.webp"
+              <Image
+                src={farmNameRegistration}
                 alt="Tennessee family farm name registration for Price Family Farm"
-                loading="lazy"
+                sizes="(max-width: 760px) 100vw, 50vw"
                 style={{ width: "100%", height: "auto", borderRadius: 12 }}
               />
               <h3>Price Family Farm registration</h3>
@@ -170,10 +172,10 @@ export default function Documentation() {
             </article>
 
             <article className="packet">
-              <img
-                src="/images/documents/master-farm-manager.webp"
+              <Image
+                src={masterFarmManager}
                 alt="University of Tennessee Master Farm Manager Program completion certificate"
-                loading="lazy"
+                sizes="(max-width: 760px) 100vw, 50vw"
                 style={{ width: "100%", height: "auto", borderRadius: 12 }}
               />
               <h3>Master Farm Manager Program</h3>
