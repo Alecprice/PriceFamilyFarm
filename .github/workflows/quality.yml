@@ -193,6 +193,7 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ runner.arch }}-1.62.1
+          save-always: true
 
       - name: Install browser test runner
         if: success()
