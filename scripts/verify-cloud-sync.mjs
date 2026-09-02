@@ -38,6 +38,13 @@ expect(component.includes('type="password"'), "Cloud Sync token control is passw
 expect(client.includes("sessionStorage"), "sync token uses session storage");
 expect(!client.includes("localStorage.setItem(TOKEN_KEY"), "sync token is never persisted in local storage");
 expect(client.includes("PRE_PULL_KEY"), "cloud pull preserves a pre-pull local recovery snapshot");
+expect(client.includes('throw new Error("pre_pull_snapshot_too_large")'), "cloud pull aborts when a safe recovery snapshot exceeds its size limit");
+expect(client.includes('throw new Error("pre_pull_snapshot_failed")'), "cloud pull aborts when browser storage cannot save the recovery snapshot");
+const prePullSnapshotWrite = client.indexOf("localStorage.setItem(PRE_PULL_KEY, snapshotRaw)");
+const cloudRestoreWrite = client.indexOf("localStorage.setItem(item.store.key, JSON.stringify(item.payload))");
+expect(prePullSnapshotWrite >= 0 && cloudRestoreWrite > prePullSnapshotWrite, "cloud pull writes the recovery snapshot before replacing Farm OS stores");
+expect(component.includes("Cloud restore stopped before replacing anything"), "Cloud Sync UI explains safe restore aborts without implying data was replaced");
+expect(client.includes("new TextEncoder().encode(snapshotRaw).byteLength"), "pre-pull snapshot limit is measured in encoded bytes");
 expect(client.includes("expectedRevision"), "client sends optimistic revision guards");
 expect(client.includes("validFarmStoreValue"), "cloud restores validate store payloads");
 expect(registry.includes("pff.growingJourney.v1"), "shared allowlist includes Growing Journey");

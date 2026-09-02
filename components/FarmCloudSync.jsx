@@ -14,6 +14,16 @@ import {
   testCloudConnection,
 } from "@/lib/farmCloudSync";
 
+function friendlyCloudSyncError(message) {
+  if (message === "pre_pull_snapshot_too_large") {
+    return "Cloud restore stopped before replacing anything because this browser has too much Farm OS data to capture a safe pre-pull recovery snapshot. Export a local backup first, then try again";
+  }
+  if (message === "pre_pull_snapshot_failed") {
+    return "Cloud restore stopped before replacing anything because the browser could not save the pre-pull recovery snapshot. Free browser storage or export a local backup, then try again";
+  }
+  return message;
+}
+
 export default function FarmCloudSync() {
   const [endpoint, setEndpoint] = useState(() => getSavedSyncEndpoint());
   const [token, setToken] = useState(() => getSessionSyncToken());
@@ -41,7 +51,7 @@ export default function FarmCloudSync() {
       setStatus(result || `${label} completed.`);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      setStatus(`${label} stopped safely: ${message}.`);
+      setStatus(`${label} stopped safely: ${friendlyCloudSyncError(message)}.`);
     } finally {
       setBusy(false);
     }
