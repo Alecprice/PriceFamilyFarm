@@ -3,6 +3,9 @@ import { neon } from "@neondatabase/serverless";
 const MAX_BODY_BYTES = 5_000_000;
 const KEY_PATTERN = /^[A-Za-z0-9._:-]{1,200}$/;
 const CHECKSUM_PATTERN = /^[a-f0-9]{64}$/;
+const EXPECTED_SCHEMA_NAME = "price-family-farm-cloud-sync";
+const EXPECTED_SCHEMA_VERSION = 2;
+const EXPECTED_PROJECT_ID = "small-water-25690282";
 
 const ALLOWED_DOCUMENT_KEYS = new Set([
   "records",
@@ -77,6 +80,17 @@ async function payloadChecksum(value) {
   return [...new Uint8Array(digest)]
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
+}
+
+function schemaReady(schema) {
+  return Boolean(
+    schema &&
+      typeof schema === "object" &&
+      !Array.isArray(schema) &&
+      schema.name === EXPECTED_SCHEMA_NAME &&
+      Number(schema.version) === EXPECTED_SCHEMA_VERSION &&
+      schema.projectId === EXPECTED_PROJECT_ID,
+  );
 }
 
 async function readBoundedBody(request) {
@@ -161,10 +175,15 @@ const worker = {
           WHERE key = 'schema'
           LIMIT 1
         `;
-        return json(env, {
-          ok: rows.length === 1,
-          schema: rows[0]?.value ?? null,
-        });
+        const schema = rows[0]?.value ?? null;
+        if (!schemaReady(schema)) {
+          return json(
+            env,
+            { ok: false, error: "schema_not_ready", schema },
+            503,
+          );
+        }
+        return json(env, { ok: true, schema });
       }
 
       if (request.method === "GET" && url.pathname === "/v1/documents") {
