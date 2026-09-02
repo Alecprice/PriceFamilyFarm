@@ -22,6 +22,9 @@ const registry = read("lib/farmStoreRegistry.js");
 const backup = read("components/FarmLocalBackup.jsx");
 const worker = read("workers/farm-sync/src/index.js");
 const workerConfig = read("workers/farm-sync/wrangler.toml");
+const workerReadme = read("workers/farm-sync/README.md");
+const workerPackage = JSON.parse(read("workers/farm-sync/package.json"));
+const rootReadme = read("README.md");
 const sitemap = read("app/sitemap.js");
 const envExample = read(".env.example");
 
@@ -57,6 +60,8 @@ const allowedEndpointFetch = client.indexOf("await fetch(`${allowedEndpoint}${pa
 expect(allowedEndpointCheck >= 0 && allowedEndpointFetch > allowedEndpointCheck, "bearer-token requests resolve the trusted endpoint before fetch");
 expect(component.includes("Production builds only send that token to the configured Farm OS sync origin"), "Cloud Sync UI explains the production token destination lock");
 expect(component.includes("This development field accepts loopback origins only"), "unconfigured builds explain their loopback-only development boundary");
+expect(component.includes("cloud schema is not ready at the required version"), "Cloud Sync UI explains a blocked stale or incomplete database schema");
+expect(component.includes("integrity checksum did not match"), "Cloud Sync UI explains integrity failures without implying data was replaced");
 expect(client.includes("PRE_PULL_KEY"), "cloud pull preserves a pre-pull local recovery snapshot");
 expect(client.includes('throw new Error("pre_pull_snapshot_too_large")'), "cloud pull aborts when a safe recovery snapshot exceeds its size limit");
 expect(client.includes('throw new Error("pre_pull_snapshot_failed")'), "cloud pull aborts when browser storage cannot save the recovery snapshot");
@@ -72,10 +77,17 @@ expect(component.includes("Cloud restore stopped before replacing anything"), "C
 expect(component.includes("automatic rollback"), "Cloud Sync UI explains automatic rollback failures");
 expect(client.includes("new TextEncoder().encode(snapshotRaw).byteLength"), "pre-pull snapshot limit is measured in encoded bytes");
 expect(client.includes("expectedRevision"), "client sends optimistic revision guards");
-const revisionAssignment = client.indexOf("revisions[store.id] = Number(body.revision)");
+expect(client.includes("Object.keys(value).sort()"), "client canonicalizes JSON object keys before hashing");
+expect(client.includes('crypto.subtle.digest("SHA-256"'), "client computes SHA-256 integrity hashes");
+expect(client.includes("invalid_cloud_checksum_"), "client refuses cloud payloads whose canonical checksum does not match");
+expect(client.includes("invalid_cloud_schema_"), "client refuses unsupported cloud schema versions");
+expect(client.includes("invalid_cloud_revision_"), "client refuses invalid cloud revisions");
+const nextRevisionCheck = client.indexOf("const nextRevision = Number(body.revision)");
+const revisionAssignment = client.indexOf("revisions[store.id] = nextRevision", nextRevisionCheck);
 const revisionCheckpoint = client.indexOf("writeRevisionMap(revisions)", revisionAssignment);
 const uploadIncrement = client.indexOf("result.uploaded += 1", revisionAssignment);
-expect(revisionAssignment >= 0 && revisionCheckpoint > revisionAssignment && revisionCheckpoint < uploadIncrement, "successful cloud pushes checkpoint each server revision before continuing");
+expect(nextRevisionCheck >= 0 && revisionAssignment > nextRevisionCheck, "successful cloud pushes validate the returned server revision before recording it");
+expect(revisionCheckpoint > revisionAssignment && revisionCheckpoint < uploadIncrement, "successful cloud pushes checkpoint each validated server revision before continuing");
 expect(client.includes("validFarmStoreValue"), "cloud restores validate store payloads");
 expect(registry.includes("pff.growingJourney.v1"), "shared allowlist includes Growing Journey");
 expect(registry.includes("new TextEncoder().encode(value).byteLength"), "shared Farm OS store limits are measured in encoded bytes");
@@ -93,7 +105,35 @@ expect(worker.includes("ALLOWED_DOCUMENT_KEYS"), "Worker enforces the Farm OS se
 expect(worker.includes("request.body.getReader()"), "Worker enforces request size while streaming the body");
 expect(worker.includes("value.byteLength"), "Worker measures streamed request size in bytes");
 expect(workerConfig.includes("PFF_ALLOWED_ORIGIN"), "Worker declares restricted production origin");
+expect(worker.includes("!configuredOrigin || !env.DATABASE_URL || !env.PFF_SYNC_TOKEN"), "Worker fails closed when the restricted origin or secrets are missing");
+expect(worker.includes('return json(env, { error: "invalid_document_key" }, 400);'), "Worker maps malformed document keys to a client error instead of an internal error");
+expect(worker.includes("Object.keys(value).sort()"), "Worker canonicalizes JSON object keys before verifying checksums");
+expect(worker.includes("CHECKSUM_PATTERN"), "Worker requires a SHA-256 shaped checksum");
+expect(worker.includes('return json(env, { error: "invalid_checksum" }, 400);'), "Worker rejects payload/checksum mismatches before database writes");
+expect(worker.includes('return json(env, { error: "invalid_source_device_key" }, 400);'), "Worker requires source-device metadata before database writes");
+expect(worker.includes("schemaVersion !== 1"), "Worker rejects unsupported Cloud Sync document schema versions");
+expect(worker.includes('EXPECTED_SCHEMA_NAME = "price-family-farm-cloud-sync"'), "Worker requires the Price Family Farm Cloud Sync schema identity");
+expect(worker.includes("EXPECTED_SCHEMA_VERSION = 2"), "Worker requires migration schema version 2 before data access");
+expect(worker.includes('EXPECTED_PROJECT_ID = "small-water-25690282"'), "Worker pins readiness to the dedicated Price Family Farm Neon project identity");
+expect(worker.includes('error: "schema_not_ready"'), "Worker reports stale or incomplete Cloud Sync schema as unavailable");
+const schemaGuardCount = worker.split("if (!schemaReady(schema)) return schemaNotReady(env, schema);").length - 1;
+expect(schemaGuardCount >= 4, "Worker enforces schema readiness for health, list, document reads, and document writes");
+const bodyParseIndex = worker.indexOf("body = JSON.parse(raw)");
+const putSchemaIndex = worker.lastIndexOf("const schema = await readSchema(sql)");
+const putFunctionIndex = worker.indexOf("SELECT pff_put_document(", putSchemaIndex);
+expect(bodyParseIndex >= 0 && putSchemaIndex > bodyParseIndex && putFunctionIndex > putSchemaIndex, "Worker validates PUT bodies before the schema query and still checks readiness before the database write");
 expect(!worker.includes("NEXT_PUBLIC_DATABASE_URL"), "Worker does not expose a public database variable");
+
+expect(rootReadme.includes("Private Farm OS records remain **local-first**"), "root documentation describes Farm OS as local-first instead of falsely backend-free");
+expect(rootReadme.includes("NEXT_PUBLIC_FARM_SYNC_ENDPOINT"), "root documentation explains explicit Cloud Sync activation");
+expect(rootReadme.includes("node scripts/verify-cloud-sync.mjs"), "root release gates include the Cloud Sync contract verifier");
+expect(rootReadme.includes("npm run bundle:check"), "root release gates include the non-mutating Worker bundle check");
+expect(workerReadme.includes("must be treated as **unverified**"), "Worker runbook marks database migration state as unverified until checked");
+expect(!workerReadme.includes("already applied"), "Worker runbook does not claim an unverified migration was already applied");
+expect(workerReadme.includes("production-mutating command"), "Worker runbook labels secret/deploy operations as production mutations");
+expect(workerReadme.includes("wrangler deploy --dry-run"), "Worker runbook documents a non-mutating Wrangler preflight");
+expect(workerPackage.scripts?.["bundle:check"]?.includes("wrangler deploy --dry-run"), "Worker package exposes a non-mutating bundle check");
+expect(workerPackage.scripts?.["bundle:check"]?.includes(".wrangler/"), "Worker dry-run output stays inside the ignored Wrangler directory");
 
 if (failures) {
   console.error(`Cloud Sync verification failed: ${failures}/${checks} checks failed.`);

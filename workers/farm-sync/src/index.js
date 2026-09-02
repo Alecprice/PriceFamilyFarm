@@ -2,6 +2,10 @@ import { neon } from "@neondatabase/serverless";
 
 const MAX_BODY_BYTES = 5_000_000;
 const KEY_PATTERN = /^[A-Za-z0-9._:-]{1,200}$/;
+const CHECKSUM_PATTERN = /^[a-f0-9]{64}$/;
+const EXPECTED_SCHEMA_NAME = "price-family-farm-cloud-sync";
+const EXPECTED_SCHEMA_VERSION = 2;
+const EXPECTED_PROJECT_ID = "small-water-25690282";
 
 const ALLOWED_DOCUMENT_KEYS = new Set([
   "records",
@@ -18,14 +22,22 @@ const ALLOWED_DOCUMENT_KEYS = new Set([
   "market",
 ]);
 
+function allowedOrigin(env) {
+  return typeof env.PFF_ALLOWED_ORIGIN === "string"
+    ? env.PFF_ALLOWED_ORIGIN.trim()
+    : "";
+}
+
 function cors(env) {
-  return {
-    "Access-Control-Allow-Origin": env.PFF_ALLOWED_ORIGIN,
+  const headers = {
     "Access-Control-Allow-Headers": "Authorization, Content-Type",
     "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };
+  const origin = allowedOrigin(env);
+  if (origin) headers["Access-Control-Allow-Origin"] = origin;
+  return headers;
 }
 
 function json(env, value, status = 200) {
@@ -47,6 +59,52 @@ function constantTimeTokenMatch(header, token) {
     mismatch |= header.charCodeAt(index) ^ expected.charCodeAt(index);
   }
   return mismatch === 0;
+}
+
+function stableJsonStringify(value) {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableJsonStringify(item)).join(",")}]`;
+  }
+  const keys = Object.keys(value).sort();
+  return `{${keys
+    .map((key) => `${JSON.stringify(key)}:${stableJsonStringify(value[key])}`)
+    .join(",")}}`;
+}
+
+async function payloadChecksum(value) {
+  const serialized = stableJsonStringify(value);
+  if (typeof serialized !== "string") throw new Error("invalid_payload");
+  const bytes = new TextEncoder().encode(serialized);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function schemaReady(schema) {
+  return Boolean(
+    schema &&
+      typeof schema === "object" &&
+      !Array.isArray(schema) &&
+      schema.name === EXPECTED_SCHEMA_NAME &&
+      Number(schema.version) === EXPECTED_SCHEMA_VERSION &&
+      schema.projectId === EXPECTED_PROJECT_ID,
+  );
+}
+
+async function readSchema(sql) {
+  const rows = await sql`
+    SELECT value
+    FROM pff_meta
+    WHERE key = 'schema'
+    LIMIT 1
+  `;
+  return rows[0]?.value ?? null;
+}
+
+function schemaNotReady(env, schema) {
+  return json(env, { ok: false, error: "schema_not_ready", schema }, 503);
 }
 
 async function readBoundedBody(request) {
@@ -96,19 +154,23 @@ async function currentFarmId(sql) {
 const worker = {
   async fetch(request, env) {
     const origin = request.headers.get("Origin");
+    const configuredOrigin = allowedOrigin(env);
 
     if (request.method === "OPTIONS") {
-      if (origin && origin !== env.PFF_ALLOWED_ORIGIN) {
+      if (!configuredOrigin) {
+        return new Response(null, { status: 503, headers: cors(env) });
+      }
+      if (origin && origin !== configuredOrigin) {
         return new Response(null, { status: 403 });
       }
       return new Response(null, { status: 204, headers: cors(env) });
     }
 
-    if (origin && origin !== env.PFF_ALLOWED_ORIGIN) {
+    if (origin && origin !== configuredOrigin) {
       return json(env, { error: "origin_not_allowed" }, 403);
     }
 
-    if (!env.DATABASE_URL || !env.PFF_SYNC_TOKEN) {
+    if (!configuredOrigin || !env.DATABASE_URL || !env.PFF_SYNC_TOKEN) {
       return json(env, { error: "server_not_configured" }, 503);
     }
 
@@ -121,19 +183,15 @@ const worker = {
 
     try {
       if (request.method === "GET" && url.pathname === "/health") {
-        const rows = await sql`
-          SELECT value
-          FROM pff_meta
-          WHERE key = 'schema'
-          LIMIT 1
-        `;
-        return json(env, {
-          ok: rows.length === 1,
-          schema: rows[0]?.value ?? null,
-        });
+        const schema = await readSchema(sql);
+        if (!schemaReady(schema)) return schemaNotReady(env, schema);
+        return json(env, { ok: true, schema });
       }
 
       if (request.method === "GET" && url.pathname === "/v1/documents") {
+        const schema = await readSchema(sql);
+        if (!schemaReady(schema)) return schemaNotReady(env, schema);
+
         const farmId = await currentFarmId(sql);
         const rows = await sql`
           SELECT
@@ -153,12 +211,23 @@ const worker = {
       const match = /^\/v1\/documents\/([^/]+)$/.exec(url.pathname);
       if (!match) return json(env, { error: "not_found" }, 404);
 
-      const key = decodeURIComponent(match[1]);
+      let key;
+      try {
+        key = decodeURIComponent(match[1]);
+      } catch {
+        return json(env, { error: "invalid_document_key" }, 400);
+      }
       if (!KEY_PATTERN.test(key) || !ALLOWED_DOCUMENT_KEYS.has(key)) {
         return json(env, { error: "invalid_document_key" }, 400);
       }
+      if (request.method !== "GET" && request.method !== "PUT") {
+        return json(env, { error: "method_not_allowed" }, 405);
+      }
 
       if (request.method === "GET") {
+        const schema = await readSchema(sql);
+        if (!schemaReady(schema)) return schemaNotReady(env, schema);
+
         const farmId = await currentFarmId(sql);
         const rows = await sql`
           SELECT
@@ -178,60 +247,66 @@ const worker = {
         return json(env, rows[0]);
       }
 
-      if (request.method === "PUT") {
-        const raw = await readBoundedBody(request);
+      const raw = await readBoundedBody(request);
 
-        let body;
-        try {
-          body = JSON.parse(raw);
-        } catch {
-          return json(env, { error: "invalid_json" }, 400);
-        }
-
-        if (!body || typeof body !== "object" || Array.isArray(body)) {
-          return json(env, { error: "invalid_body" }, 400);
-        }
-
-        const schemaVersion = Number(body.schemaVersion ?? 1);
-        const expectedRevision =
-          body.expectedRevision == null ? null : Number(body.expectedRevision);
-        const checksum =
-          typeof body.checksum === "string" ? body.checksum.slice(0, 200) : null;
-        const sourceDeviceKey =
-          typeof body.sourceDeviceKey === "string"
-            ? body.sourceDeviceKey.slice(0, 200)
-            : null;
-
-        if (!Number.isInteger(schemaVersion) || schemaVersion < 1) {
-          return json(env, { error: "invalid_schema_version" }, 400);
-        }
-        if (
-          expectedRevision !== null &&
-          (!Number.isInteger(expectedRevision) || expectedRevision < 0)
-        ) {
-          return json(env, { error: "invalid_expected_revision" }, 400);
-        }
-        if (!Object.prototype.hasOwnProperty.call(body, "payload")) {
-          return json(env, { error: "payload_required" }, 400);
-        }
-
-        const resultRows = await sql`
-          SELECT pff_put_document(
-            ${key},
-            ${JSON.stringify(body.payload)}::jsonb,
-            ${schemaVersion},
-            ${expectedRevision},
-            ${checksum},
-            ${sourceDeviceKey}
-          ) AS result
-        `;
-
-        const result = resultRows[0]?.result;
-        if (result?.status === "conflict") return json(env, result, 409);
-        return json(env, result ?? { error: "sync_failed" }, 200);
+      let body;
+      try {
+        body = JSON.parse(raw);
+      } catch {
+        return json(env, { error: "invalid_json" }, 400);
       }
 
-      return json(env, { error: "method_not_allowed" }, 405);
+      if (!body || typeof body !== "object" || Array.isArray(body)) {
+        return json(env, { error: "invalid_body" }, 400);
+      }
+
+      const schemaVersion = Number(body.schemaVersion);
+      const expectedRevision = Number(body.expectedRevision);
+      const checksum =
+        typeof body.checksum === "string"
+          ? body.checksum.trim().toLowerCase()
+          : "";
+      const sourceDeviceKey =
+        typeof body.sourceDeviceKey === "string"
+          ? body.sourceDeviceKey.trim()
+          : "";
+
+      if (schemaVersion !== 1) {
+        return json(env, { error: "invalid_schema_version" }, 400);
+      }
+      if (!Number.isInteger(expectedRevision) || expectedRevision < 0) {
+        return json(env, { error: "invalid_expected_revision" }, 400);
+      }
+      if (!Object.prototype.hasOwnProperty.call(body, "payload")) {
+        return json(env, { error: "payload_required" }, 400);
+      }
+      if (!sourceDeviceKey || sourceDeviceKey.length > 200) {
+        return json(env, { error: "invalid_source_device_key" }, 400);
+      }
+      if (
+        !CHECKSUM_PATTERN.test(checksum) ||
+        checksum !== (await payloadChecksum(body.payload))
+      ) {
+        return json(env, { error: "invalid_checksum" }, 400);
+      }
+
+      const schema = await readSchema(sql);
+      if (!schemaReady(schema)) return schemaNotReady(env, schema);
+
+      const resultRows = await sql`
+        SELECT pff_put_document(
+          ${key},
+          ${JSON.stringify(body.payload)}::jsonb,
+          ${schemaVersion},
+          ${expectedRevision},
+          ${checksum},
+          ${sourceDeviceKey}
+        ) AS result
+      `;
+
+      const result = resultRows[0]?.result;
+      if (result?.status === "conflict") return json(env, result, 409);
+      return json(env, result ?? { error: "sync_failed" }, 200);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (message.includes("payload_too_large")) {

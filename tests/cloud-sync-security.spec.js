@@ -45,6 +45,82 @@ test("cloud restore requires explicit PULL confirmation on an allowed loopback e
   await expect(button).toBeEnabled();
 });
 
+test("connection test refuses a cloud schema that is not ready", async ({ page }) => {
+  await page.route("http://localhost:8787/health", async (route) => {
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: false,
+        error: "schema_not_ready",
+        schema: {
+          name: "price-family-farm-cloud-sync",
+          version: 1,
+          projectId: "small-water-25690282",
+        },
+      }),
+    });
+  });
+
+  await page.goto("/farm-os/cloud-sync/");
+  await page.getByLabel("Local development endpoint").fill("http://localhost:8787");
+  await page.getByLabel("Private sync token").fill("test-token");
+  await page.getByRole("button", { name: "Test private connection" }).click();
+
+  await expect(page.getByRole("status")).toContainText(
+    "cloud schema is not ready at the required version",
+  );
+});
+
+test("checksum mismatch stops cloud restore before browser data is replaced", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "price-family-farm-funding-v1",
+      JSON.stringify([{ id: "browser-copy" }]),
+    );
+  });
+
+  await page.route("http://localhost:8787/v1/documents", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        documents: [{ document_key: "funding" }],
+      }),
+    });
+  });
+  await page.route("http://localhost:8787/v1/documents/funding", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        document_key: "funding",
+        schema_version: 1,
+        revision: 1,
+        payload: [{ id: "cloud-copy" }],
+        checksum: "0".repeat(64),
+      }),
+    });
+  });
+
+  await page.goto("/farm-os/cloud-sync/");
+  await page.getByLabel("Local development endpoint").fill("http://localhost:8787");
+  await page.getByLabel("Private sync token").fill("test-token");
+  await page.getByLabel("Type PULL to replace matching browser data").fill("PULL");
+  await page.getByRole("button", { name: "Pull validated cloud data to this browser" }).click();
+
+  await expect(page.getByRole("status")).toContainText(
+    "integrity checksum did not match",
+  );
+
+  const storage = await page.evaluate(() => ({
+    funding: JSON.parse(localStorage.getItem("price-family-farm-funding-v1") || "null"),
+    recovery: localStorage.getItem("price-family-farm-pre-cloud-pull-v1"),
+  }));
+  expect(storage.funding).toEqual([{ id: "browser-copy" }]);
+  expect(storage.recovery).toBeNull();
+});
+
 test("pre-pull recovery restores prior values, absences, and revisions together", async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem(

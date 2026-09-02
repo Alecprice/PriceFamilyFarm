@@ -27,6 +27,24 @@ function friendlyCloudSyncError(message) {
   if (message === "token_required") {
     return "Enter the private sync token before connecting";
   }
+  if (message === "schema_not_ready") {
+    return "The dedicated Price Family Farm cloud schema is not ready at the required version. Verify the database target and apply only confirmed-missing migrations before syncing";
+  }
+  if (message.startsWith("invalid_cloud_checksum_")) {
+    return "Cloud restore found data whose integrity checksum did not match, so browser data was not replaced";
+  }
+  if (message.startsWith("invalid_cloud_schema_")) {
+    return "Cloud restore found data from an unsupported schema version, so browser data was not replaced";
+  }
+  if (message.startsWith("invalid_cloud_revision_")) {
+    return "Cloud restore found invalid revision metadata, so browser data was not replaced";
+  }
+  if (message.startsWith("invalid_push_revision_")) {
+    return "The cloud service returned invalid revision metadata after an upload, so the browser did not checkpoint that response";
+  }
+  if (message === "invalid_checksum") {
+    return "The cloud service rejected the upload because its integrity checksum did not match the payload";
+  }
   if (message === "pre_pull_snapshot_too_large") {
     return "Cloud restore stopped before replacing anything because this browser has too much Farm OS data to capture a safe pre-pull recovery snapshot. Export a local backup first, then try again";
   }
@@ -201,7 +219,7 @@ export default function FarmCloudSync() {
       <section className="farm-panel" aria-labelledby="cloud-sync-upload-heading">
         <span className="eyebrow">Browser → cloud</span>
         <h2 id="cloud-sync-upload-heading">Back up validated Farm OS data.</h2>
-        <p>{presentCount} of {inventory.length} allowed data areas currently contain valid browser-local data. Uploads use revision checks, so a newer cloud copy is not silently overwritten.</p>
+        <p>{presentCount} of {inventory.length} allowed data areas currently contain valid browser-local data. Uploads use canonical integrity checksums and revision guards, so corrupted payloads and newer cloud copies are not silently accepted or overwritten.</p>
         <div className="farm-actions">
           <button
             className="farm-action"
@@ -217,7 +235,7 @@ export default function FarmCloudSync() {
       <section className="farm-panel" aria-labelledby="cloud-sync-pull-heading">
         <span className="eyebrow">Cloud → browser</span>
         <h2 id="cloud-sync-pull-heading">Restore a trusted cloud copy to this device.</h2>
-        <p>Cloud payloads are checked against the same fixed Farm OS allowlist and size rules used by local backup. Before replacement, the local working set is captured in a pre-pull recovery snapshot.</p>
+        <p>Cloud payloads must match the expected Farm OS schema, revision metadata, canonical integrity checksum, fixed allowlist, and size rules before they can replace browser data. Before replacement, the local working set is captured in a pre-pull recovery snapshot.</p>
         {cloudCount != null ? <p><strong>{cloudCount}</strong> cloud data areas were visible during the last connection check.</p> : null}
         <div className="farm-field" style={{ maxWidth: 420 }}>
           <label htmlFor="cloud-pull-confirmation">Type PULL to replace matching browser data</label>
