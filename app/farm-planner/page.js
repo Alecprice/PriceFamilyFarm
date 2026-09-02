@@ -25,7 +25,7 @@ export default function FarmPlannerPage() {
         </div>
       </header>
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <section>
           <div className="wrap">
             <div className="section-head">
