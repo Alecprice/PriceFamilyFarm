@@ -185,25 +185,56 @@ for (const href of ["/plantings", "/market-planner", "/crop-profitability", "/we
   expect(osExpansion.includes(`href="${href}"`), `Farm OS expansion retains private access to ${href}`);
 }
 
-const privateRoutes = [
-  "farm-os",
-  "farm-today",
-  "farm-records",
-  "farm-analytics",
-  "farm-inventory",
-  "plantings",
-  "crop-profitability",
-  "farm-data-health",
-  "market-planner",
-  "weekly-work-sheet",
-  "funding",
+const privatePageFiles = [
+  "app/farm-os/page.js",
+  "app/farm-os/cloud-sync/page.js",
+  "app/farm-os/experiments/page.js",
+  "app/farm-os/harvest/page.js",
+  "app/farm-os/journal/page.js",
+  "app/farm-os/timeline/page.js",
+  "app/farm-os/calendar/page.js",
+  "app/farm-os/map/page.js",
+  "app/farm-os/planner/page.js",
+  "app/farm-today/page.js",
+  "app/farm-weekly-review/page.js",
+  "app/weekly-work-sheet/page.js",
+  "app/farm-records/page.js",
+  "app/farm-analytics/page.js",
+  "app/crop-profitability/page.js",
+  "app/farm-inventory/page.js",
+  "app/farm-data-health/page.js",
+  "app/plantings/page.js",
+  "app/market-planner/page.js",
+  "app/learn/garden-layout-builder/page.js",
+  "app/funding/page.js",
+  "app/privacy-tools/page.js",
+  "app/farm-backup/page.js",
+  "app/my-growing-journey/page.js",
 ];
-const privatePages = privateRoutes.map((route) => read(`app/${route}/page.js`));
-expect(privatePages.every((source) => source.includes("index: false")), "browser-local operating pages are noindex");
+for (const file of privatePageFiles) {
+  expect(read(file).includes("index: false"), `browser-local page is noindex: ${file}`);
+}
 
 const robots = read("app/robots.js");
-for (const route of ["/farm-analytics", "/farm-inventory", "/plantings", "/crop-profitability", "/farm-data-health", "/market-planner", "/weekly-work-sheet"]) {
-  expect(robots.includes(`"${route}"`), `robots disallows private route ${route}`);
+for (const route of [
+  "/farm-os",
+  "/farm-today",
+  "/farm-weekly-review",
+  "/weekly-work-sheet",
+  "/farm-records",
+  "/farm-analytics",
+  "/crop-profitability",
+  "/farm-inventory",
+  "/farm-data-health",
+  "/plantings",
+  "/market-planner",
+  "/learn/garden-layout-builder",
+  "/funding",
+  "/privacy-tools",
+  "/farm-backup",
+  "/my-growing-journey",
+]) {
+  expect(robots.includes(`"${route}"`), `robots disallows browser-local route ${route}`);
 }
 
 if (failures.length) {
