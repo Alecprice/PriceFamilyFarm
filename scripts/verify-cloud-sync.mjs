@@ -47,9 +47,15 @@ expect(client.includes("PRE_PULL_KEY"), "cloud pull preserves a pre-pull local r
 expect(client.includes('throw new Error("pre_pull_snapshot_too_large")'), "cloud pull aborts when a safe recovery snapshot exceeds its size limit");
 expect(client.includes('throw new Error("pre_pull_snapshot_failed")'), "cloud pull aborts when browser storage cannot save the recovery snapshot");
 const prePullSnapshotWrite = client.indexOf("localStorage.setItem(PRE_PULL_KEY, snapshotRaw)");
-const cloudRestoreWrite = client.indexOf("localStorage.setItem(item.store.key, JSON.stringify(item.payload))");
-expect(prePullSnapshotWrite >= 0 && cloudRestoreWrite > prePullSnapshotWrite, "cloud pull writes the recovery snapshot before replacing Farm OS stores");
+const cloudRestoreBatch = client.indexOf('applyLocalStoreBatch(changes, nextRevisions, "cloud_restore")');
+expect(prePullSnapshotWrite >= 0 && cloudRestoreBatch > prePullSnapshotWrite, "cloud pull writes the recovery snapshot before replacing Farm OS stores");
+expect(client.includes("version: 2"), "pre-pull recovery snapshot records the recoverable v2 format");
+expect(client.includes("absent,"), "pre-pull recovery snapshot records stores that were absent before the pull");
+expect(client.includes("applyLocalStoreBatch"), "cloud restores use rollback-aware browser storage batches");
+expect(client.includes("restorePrePullFarmStores"), "cloud sync exposes an in-app pre-pull recovery operation");
+expect(component.includes("Restore pre-pull browser state"), "Cloud Sync UI exposes the pre-pull recovery action");
 expect(component.includes("Cloud restore stopped before replacing anything"), "Cloud Sync UI explains safe restore aborts without implying data was replaced");
+expect(component.includes("automatic rollback"), "Cloud Sync UI explains automatic rollback failures");
 expect(client.includes("new TextEncoder().encode(snapshotRaw).byteLength"), "pre-pull snapshot limit is measured in encoded bytes");
 expect(client.includes("expectedRevision"), "client sends optimistic revision guards");
 const revisionAssignment = client.indexOf("revisions[store.id] = Number(body.revision)");
