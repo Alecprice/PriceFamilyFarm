@@ -14,11 +14,12 @@ The operational layer keeps private farm notes separate from public website cont
 - `/available` — conservative seasonal availability page plus interest-list capture; it never treats future production as confirmed inventory
 - `/weather` — NWS area forecast with cached/explicit unavailable fallback; it never invents current weather values
 - `/privacy-tools` — explicit browser-local data controls
+- `/farm-os/cloud-sync` — optional private Cloud Sync bridge; inactive unless a trusted production endpoint is deliberately configured and deployed
 - task-oriented primary navigation: **Home · Farm · Plan · Learn · Contact**
 - private operating pages are `noindex` and excluded from the sitemap
 - contact and availability forms share one Web3Forms configuration and include validation, throttling, timeout handling, fail-closed behavior, and honeypot fields
 
-Private Farm OS records use `localStorage`. They are device/browser specific unless exported and restored. They are intentionally not synchronized to a public backend.
+Private Farm OS records remain **local-first** in `localStorage`. Without Cloud Sync activation they are device/browser specific unless exported and restored. The optional Cloud Sync path uses a private bearer token held in `sessionStorage`, only permits a build-configured production API origin (or loopback during development), and is not activated by the normal static-site build.
 
 ## Run locally
 
@@ -36,10 +37,17 @@ npm audit --audit-level=high
 npm run lint
 node scripts/verify-farm-os.mjs
 node scripts/verify-security.mjs
+node scripts/verify-cloud-sync.mjs
 npm run build
+
+cd workers/farm-sync
+npm ci
+npm test
+npm run bundle:check
+npm audit --audit-level=high
 ```
 
-Pull requests and `main` also run GitHub Actions quality gates plus CodeQL security analysis.
+`npm run bundle:check` compiles the Worker with Wrangler `--dry-run`; it does not deploy the Worker. Pull requests and `main` run the corresponding GitHub Actions quality gates plus CodeQL security analysis.
 
 ## Static hosting
 
@@ -56,6 +64,20 @@ Set `NEXT_PUBLIC_SITE_URL=https://price-family-farm.alecjprice.com` in the build
 ### Contact form
 
 Web3Forms uses a browser-visible access key supplied through `NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY`; the production key does not belong in source control. Web3Forms documents Restrict to Domain as a paid/Pro feature. If available, whitelist only `price-family-farm.alecjprice.com`. The free-plan baseline is provider spam filtering plus the site's botcheck, validation, throttling, and timeout controls.
+
+### Optional Farm OS Cloud Sync
+
+Cloud Sync is a separate private operating path, not a requirement for the public site. Production activation requires all of the following to be deliberately completed and verified:
+
+1. verify the dedicated `price-family-farm` Neon target and its current migration/schema state;
+2. apply only confirmed-missing migrations from `workers/farm-sync/migrations/` in numeric order;
+3. configure the Worker secrets and restricted `PFF_ALLOWED_ORIGIN`;
+4. deploy and verify the Worker only after explicit production authorization;
+5. set `NEXT_PUBLIC_FARM_SYNC_ENDPOINT` to the exact deployed HTTPS Worker origin and rebuild the static site.
+
+Until those steps are complete, leave `NEXT_PUBLIC_FARM_SYNC_ENDPOINT` blank in production builds. Never put the Neon connection string or private sync token in a `NEXT_PUBLIC_*` variable.
+
+See `workers/farm-sync/README.md` for the Worker-specific runbook.
 
 ## AWS production security
 
