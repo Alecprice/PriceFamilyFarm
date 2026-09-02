@@ -22,6 +22,9 @@ const registry = read("lib/farmStoreRegistry.js");
 const backup = read("components/FarmLocalBackup.jsx");
 const worker = read("workers/farm-sync/src/index.js");
 const workerConfig = read("workers/farm-sync/wrangler.toml");
+const workerReadme = read("workers/farm-sync/README.md");
+const workerPackage = JSON.parse(read("workers/farm-sync/package.json"));
+const rootReadme = read("README.md");
 const sitemap = read("app/sitemap.js");
 const envExample = read(".env.example");
 
@@ -93,7 +96,20 @@ expect(worker.includes("ALLOWED_DOCUMENT_KEYS"), "Worker enforces the Farm OS se
 expect(worker.includes("request.body.getReader()"), "Worker enforces request size while streaming the body");
 expect(worker.includes("value.byteLength"), "Worker measures streamed request size in bytes");
 expect(workerConfig.includes("PFF_ALLOWED_ORIGIN"), "Worker declares restricted production origin");
+expect(worker.includes("!configuredOrigin || !env.DATABASE_URL || !env.PFF_SYNC_TOKEN"), "Worker fails closed when the restricted origin or secrets are missing");
+expect(worker.includes('return json(env, { error: "invalid_document_key" }, 400);'), "Worker maps malformed document keys to a client error instead of an internal error");
 expect(!worker.includes("NEXT_PUBLIC_DATABASE_URL"), "Worker does not expose a public database variable");
+
+expect(rootReadme.includes("Private Farm OS records remain **local-first**"), "root documentation describes Farm OS as local-first instead of falsely backend-free");
+expect(rootReadme.includes("NEXT_PUBLIC_FARM_SYNC_ENDPOINT"), "root documentation explains explicit Cloud Sync activation");
+expect(rootReadme.includes("node scripts/verify-cloud-sync.mjs"), "root release gates include the Cloud Sync contract verifier");
+expect(rootReadme.includes("npm run bundle:check"), "root release gates include the non-mutating Worker bundle check");
+expect(workerReadme.includes("must be treated as **unverified**"), "Worker runbook marks database migration state as unverified until checked");
+expect(!workerReadme.includes("already applied"), "Worker runbook does not claim an unverified migration was already applied");
+expect(workerReadme.includes("production-mutating command"), "Worker runbook labels secret/deploy operations as production mutations");
+expect(workerReadme.includes("wrangler deploy --dry-run"), "Worker runbook documents a non-mutating Wrangler preflight");
+expect(workerPackage.scripts?.["bundle:check"]?.includes("wrangler deploy --dry-run"), "Worker package exposes a non-mutating bundle check");
+expect(workerPackage.scripts?.["bundle:check"]?.includes(".wrangler/"), "Worker dry-run output stays inside the ignored Wrangler directory");
 
 if (failures) {
   console.error(`Cloud Sync verification failed: ${failures}/${checks} checks failed.`);
