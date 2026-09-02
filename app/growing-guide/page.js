@@ -53,12 +53,12 @@ const CHALLENGES = [
   {
     title: "Heavy clay soil",
     risk: "Medium risk",
-    body: "East Tennessee's red clay compacts easily, drains slowly, and runs acidic, which is hard on root vegetables and anything that hates wet feet.",
+    body: "East Tennessee's red clay compacts easily, drains slowly, and often runs acidic, which is hard on root vegetables and anything that hates wet feet.",
     fixes: [
       "Raised beds and containers filled with real growing mix, our main strategy",
-      "Heavy compost and organic matter worked into any in-ground beds",
-      "A UT Extension soil test before amending blind",
-      "Gypsum to help break up compaction over time",
+      "Compost and other organic matter used to support soil structure and drainage in in-ground beds",
+      "A UT Extension soil test before changing pH or adding amendments",
+      "Avoid working clay while it is wet, which can worsen compaction and destroy soil structure",
     ],
   },
   {
@@ -153,113 +153,116 @@ const CHALLENGES = [
 export default function GrowingGuide() {
   return (
     <>
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <Nav />
 
-      <header className="page-head">
-        <div className="wrap">
-          <span className="eyebrow on-dark">Growing Guide</span>
-          <h1>What actually works, growing in East Tennessee.</h1>
-          <p>A planting calendar built for Greene County's climate, and an honest look at the challenges that come with it. Not a generic zone chart. What we actually plan around.</p>
-        </div>
-      </header>
+      <main id="main-content" tabIndex={-1}>
+        <header className="page-head">
+          <div className="wrap">
+            <span className="eyebrow on-dark">Growing Guide</span>
+            <h1>What actually works, growing in East Tennessee.</h1>
+            <p>A planting calendar built for Greene County's climate, and an honest look at the challenges that come with it. Not a generic zone chart. What we actually plan around.</p>
+          </div>
+        </header>
 
-      <section>
-        <div className="wrap">
-          <div className="zone-banner">
-            <div className="zi"><b>Zone 7a</b><span>USDA Hardiness, Greeneville</span></div>
-            <div className="zi"><b>~Apr 15</b><span>Average last spring frost</span></div>
-            <div className="zi"><b>~Oct 20</b><span>Average first fall frost</span></div>
-            <div className="zi"><b>~190 days</b><span>Typical growing season</span></div>
+        <section>
+          <div className="wrap">
+            <div className="zone-banner">
+              <div className="zi"><b>Zone 7a</b><span>USDA Hardiness, Greeneville</span></div>
+              <div className="zi"><b>~Apr 15</b><span>Average last spring frost</span></div>
+              <div className="zi"><b>~Oct 20</b><span>Average first fall frost</span></div>
+              <div className="zi"><b>~190 days</b><span>Typical growing season</span></div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="bg-cream bg-line-top">
-        <div className="wrap map-feature">
-          <div className="map-feature-copy">
-            <span className="eyebrow">Greene County</span>
-            <h2>Farming here isn&rsquo;t new.</h2>
-            <p>
-              People have been growing food in this valley, between the Bays Mountains and the Nolichucky, for
-              a very long time. This antique county map shows Greeneville and the surrounding settlements as
-              they were laid out generations ago, the same land and the same watersheds we&rsquo;re working
-              with today.
-            </p>
-            <p style={{ marginTop: 14 }}>
-              <Link href="/heritage" className="stat-link" style={{ color: "var(--clay-dark)", borderColor: "var(--clay)" }}>
-                See the full county history &amp; cash crop timeline →
-              </Link>
-            </p>
+        <section className="bg-cream bg-line-top">
+          <div className="wrap map-feature">
+            <div className="map-feature-copy">
+              <span className="eyebrow">Greene County</span>
+              <h2>Farming here isn&rsquo;t new.</h2>
+              <p>
+                People have been growing food in this valley, between the Bays Mountains and the Nolichucky, for
+                a very long time. This antique county map shows Greeneville and the surrounding settlements as
+                they were laid out generations ago, the same land and the same watersheds we&rsquo;re working
+                with today.
+              </p>
+              <p style={{ marginTop: 14 }}>
+                <Link href="/heritage" className="stat-link" style={{ color: "var(--clay-dark)", borderColor: "var(--clay)" }}>
+                  See the full county history &amp; cash crop timeline →
+                </Link>
+              </p>
+            </div>
+            <div className="map-feature-image">
+              <Image
+                src="/images/greene-county-antique-map.jpg"
+                alt="Antique map of Greene County, Tennessee, showing Greeneville, Rogersville, and surrounding settlements"
+                width={736}
+                height={506}
+                sizes="(max-width: 800px) 100vw, 640px"
+              />
+            </div>
           </div>
-          <div className="map-feature-image">
-            <Image
-              src="/images/greene-county-antique-map.jpg"
-              alt="Antique map of Greene County, Tennessee, showing Greeneville, Rogersville, and surrounding settlements"
-              width={736}
-              height={506}
-              sizes="(max-width: 800px) 100vw, 640px"
-            />
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="section-tight">
-        <div className="wrap">
-          <div className="section-head">
-            <span className="eyebrow">Planting calendar</span>
-            <h2>Tap a date, get a reminder.</h2>
-            <p>Each row shows the next occurrence of that planting window. Add it straight to Google Calendar, or download an .ics file that works with Apple Calendar, Outlook, and most other calendar apps on iOS and Android. Reminders repeat every year.</p>
-          </div>
-          <div className="plant-table">
-            {CALENDAR.map((c, i) => (
-              <PlantingRow key={`${c.crop}-${c.task}-${i}`} {...c} />
-            ))}
-          </div>
-          <p style={{ marginTop: 16, color: "var(--ink-soft)", fontSize: 13.5 }}>
-            Dates are averages for Zone 7a in Greeneville, TN. Always check the current forecast before planting frost-sensitive crops. A 30% chance of frost still means a real chance.
-          </p>
-        </div>
-      </section>
-
-      <section>
-        <div className="wrap">
-          <div className="section-head">
-            <span className="eyebrow">The full list</span>
-            <h2>130+ crops grown across Northeast Tennessee.</h2>
-            <p>
-              Everything below is realistic for a Zone 6b/7a garden in this part of the state, whether or not
-              it's in our own beds yet. Filter by season to see what should be going in the ground right now,
-              or browse the whole list by category.
+        <section className="section-tight">
+          <div className="wrap">
+            <div className="section-head">
+              <span className="eyebrow">Planting calendar</span>
+              <h2>Tap a date, get a reminder.</h2>
+              <p>Each row shows the next occurrence of that planting window. Add it straight to Google Calendar, or download an .ics file that works with Apple Calendar, Outlook, and most other calendar apps on iOS and Android. Reminders repeat every year.</p>
+            </div>
+            <div className="plant-table">
+              {CALENDAR.map((c, i) => (
+                <PlantingRow key={`${c.crop}-${c.task}-${i}`} {...c} />
+              ))}
+            </div>
+            <p style={{ marginTop: 16, color: "var(--ink-soft)", fontSize: 13.5 }}>
+              Dates are averages for Zone 7a in Greeneville, TN. Always check the current forecast before planting frost-sensitive crops. A 30% chance of frost still means a real chance.
             </p>
           </div>
-          <CropCatalog />
-        </div>
-      </section>
+        </section>
 
-      <section className="bg-cream bg-line-top">
-        <div className="wrap">
-          <div className="section-head">
-            <span className="eyebrow">Challenges &amp; mitigation</span>
-            <h2>What actually goes wrong here, and what we do about it.</h2>
-            <p>East Tennessee is a good place to grow, but it's not an easy one. Here's what we plan around, prevent where we can, and rebuild from when we can't.</p>
+        <section>
+          <div className="wrap">
+            <div className="section-head">
+              <span className="eyebrow">The full list</span>
+              <h2>130+ crops grown across Northeast Tennessee.</h2>
+              <p>
+                Everything below is realistic for a Zone 6b/7a garden in this part of the state, whether or not
+                it's in our own beds yet. Filter by season to see what should be going in the ground right now,
+                or browse the whole list by category.
+              </p>
+            </div>
+            <CropCatalog />
           </div>
-          <div className="grid-2">
-            {CHALLENGES.map((c) => (
-              <div className="challenge-card" key={c.title}>
-                <span className="risk">{c.risk}</span>
-                <h3>{c.title}</h3>
-                <p>{c.body}</p>
-                <div className="fix-label">Mitigation</div>
-                <ul>
-                  {c.fixes.map((f) => (
-                    <li key={f}>{f}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+        </section>
+
+        <section className="bg-cream bg-line-top">
+          <div className="wrap">
+            <div className="section-head">
+              <span className="eyebrow">Challenges &amp; mitigation</span>
+              <h2>What actually goes wrong here, and what we do about it.</h2>
+              <p>East Tennessee is a good place to grow, but it's not an easy one. Here's what we plan around, prevent where we can, and rebuild from when we can't.</p>
+            </div>
+            <div className="grid-2">
+              {CHALLENGES.map((c) => (
+                <div className="challenge-card" key={c.title}>
+                  <span className="risk">{c.risk}</span>
+                  <h3>{c.title}</h3>
+                  <p>{c.body}</p>
+                  <div className="fix-label">Mitigation</div>
+                  <ul>
+                    {c.fixes.map((f) => (
+                      <li key={f}>{f}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <Footer />
     </>
