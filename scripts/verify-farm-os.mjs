@@ -29,6 +29,7 @@ const required = [
   "app/available/page.js",
   "app/funding/page.js",
   "app/weather/page.js",
+  "components/FarmOsDashboard.jsx",
   "components/FarmRecordWorkspace.jsx",
   "components/FarmAnalyticsDashboard.jsx",
   "components/FarmInventory.jsx",
@@ -114,6 +115,13 @@ expect(
   "Farm OS backup uses canonical shared store validation"
 );
 expect(backup.includes("price-family-farm-pre-restore-snapshot-v1"), "Farm OS backup captures a pre-restore snapshot");
+
+const osDashboard = read("components/FarmOsDashboard.jsx");
+expect(osDashboard.includes('from "@/lib/farmStoreRegistry"'), "Farm OS dashboard imports the canonical shared store registry");
+expect(osDashboard.includes("FARM_STORES"), "Farm OS dashboard counts every canonical Farm OS store");
+expect(osDashboard.includes("readValidFarmStore"), "Farm OS dashboard reuses canonical store validation");
+expect(!osDashboard.includes("const STORES ="), "Farm OS dashboard does not duplicate local-storage key and size definitions");
+expect(osDashboard.includes("detectedStoreCount"), "Farm OS dashboard reports the complete detected canonical store count");
 
 const privacy = read("components/PrivacyTools.jsx");
 expect(privacy.includes("pff.growingJourney.v1"), "privacy tools expose Growing Journey local data");
