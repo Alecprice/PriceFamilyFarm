@@ -57,8 +57,17 @@ jobs:
           set -o pipefail
           node scripts/verify-security.mjs 2>&1 | tee security.log
 
-      - name: Report lint or security-contract failure
-        if: failure() && github.event_name == 'pull_request' && (steps.lint.outcome == 'failure' || steps.shell.outcome == 'failure' || steps.security.outcome == 'failure')
+      - name: Farm sync worker tests
+        id: worker
+        working-directory: workers/farm-sync
+        run: |
+          set -o pipefail
+          npm ci 2>&1 | tee worker-install.log
+          npm test 2>&1 | tee worker-test.log
+          npm audit --audit-level=high 2>&1 | tee worker-audit.log
+
+      - name: Report lint, security, or worker-contract failure
+        if: failure() && github.event_name == 'pull_request' && (steps.lint.outcome == 'failure' || steps.shell.outcome == 'failure' || steps.security.outcome == 'failure' || steps.worker.outcome == 'failure')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -81,6 +90,24 @@ jobs:
               echo "#### Security contracts"
               echo '```text'
               tail -n 120 security.log
+              echo '```'
+            fi
+            if [ -f workers/farm-sync/worker-install.log ]; then
+              echo "#### Farm sync worker install"
+              echo '```text'
+              tail -n 120 workers/farm-sync/worker-install.log
+              echo '```'
+            fi
+            if [ -f workers/farm-sync/worker-test.log ]; then
+              echo "#### Farm sync worker tests"
+              echo '```text'
+              tail -n 120 workers/farm-sync/worker-test.log
+              echo '```'
+            fi
+            if [ -f workers/farm-sync/worker-audit.log ]; then
+              echo "#### Farm sync worker audit"
+              echo '```text'
+              tail -n 120 workers/farm-sync/worker-audit.log
               echo '```'
             fi
           } > /tmp/source-security-comment.md
@@ -161,5 +188,8 @@ jobs:
             security.log
             build.log
             playwright.log
+            workers/farm-sync/worker-install.log
+            workers/farm-sync/worker-test.log
+            workers/farm-sync/worker-audit.log
             test-results/
             playwright-report/
