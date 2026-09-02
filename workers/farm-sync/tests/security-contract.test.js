@@ -14,6 +14,8 @@ const configuredEnv = {
   PFF_SYNC_TOKEN: "test-sync-token",
   PFF_ALLOWED_ORIGIN: allowedOrigin,
 };
+const emptyObjectChecksum =
+  "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a";
 
 function authorizedHeaders(extra = {}) {
   return {
@@ -25,6 +27,17 @@ function authorizedHeaders(extra = {}) {
 
 async function readJson(response) {
   return JSON.parse(await response.text());
+}
+
+async function putBody(body) {
+  return worker.fetch(
+    new Request("https://sync.example/v1/documents/records", {
+      method: "PUT",
+      headers: authorizedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify(body),
+    }),
+    configuredEnv,
+  );
 }
 
 describe("Farm OS cloud sync security contracts", () => {
@@ -49,6 +62,12 @@ describe("Farm OS cloud sync security contracts", () => {
     expect(source).toContain("request.body.getReader()");
     expect(source).toContain("value.byteLength");
     expect(source).toContain("payload_too_large");
+  });
+
+  it("uses canonical key ordering for integrity hashes", () => {
+    expect(source).toContain("Object.keys(value).sort()");
+    expect(source).toContain('crypto.subtle.digest("SHA-256"');
+    expect(source).toContain("CHECKSUM_PATTERN");
   });
 
   it("serializes first-write races before the document row lookup", () => {
@@ -192,6 +211,48 @@ describe("Farm OS cloud sync request boundary", () => {
     );
     expect(response.status).toBe(400);
     expect(await readJson(response)).toEqual({ error: "invalid_json" });
+  });
+
+  it("requires supported schema and optimistic revision metadata before database writes", async () => {
+    const unsupportedSchema = await putBody({
+      schemaVersion: 2,
+      expectedRevision: 0,
+      checksum: emptyObjectChecksum,
+      sourceDeviceKey: "device-1",
+      payload: {},
+    });
+    expect(unsupportedSchema.status).toBe(400);
+    expect(await readJson(unsupportedSchema)).toEqual({ error: "invalid_schema_version" });
+
+    const missingRevision = await putBody({
+      schemaVersion: 1,
+      checksum: emptyObjectChecksum,
+      sourceDeviceKey: "device-1",
+      payload: {},
+    });
+    expect(missingRevision.status).toBe(400);
+    expect(await readJson(missingRevision)).toEqual({ error: "invalid_expected_revision" });
+  });
+
+  it("requires a source device key and matching canonical payload checksum", async () => {
+    const missingDevice = await putBody({
+      schemaVersion: 1,
+      expectedRevision: 0,
+      checksum: emptyObjectChecksum,
+      payload: {},
+    });
+    expect(missingDevice.status).toBe(400);
+    expect(await readJson(missingDevice)).toEqual({ error: "invalid_source_device_key" });
+
+    const badChecksum = await putBody({
+      schemaVersion: 1,
+      expectedRevision: 0,
+      checksum: "0".repeat(64),
+      sourceDeviceKey: "device-1",
+      payload: {},
+    });
+    expect(badChecksum.status).toBe(400);
+    expect(await readJson(badChecksum)).toEqual({ error: "invalid_checksum" });
   });
 
   it("enforces the declared byte limit before reading the body", async () => {
