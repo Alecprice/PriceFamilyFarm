@@ -123,6 +123,12 @@ expect(osDashboard.includes("readValidFarmStore"), "Farm OS dashboard reuses can
 expect(!osDashboard.includes("const STORES ="), "Farm OS dashboard does not duplicate local-storage key and size definitions");
 expect(osDashboard.includes("detectedStoreCount"), "Farm OS dashboard reports the complete detected canonical store count");
 
+const osExpansion = read("components/FarmOsExpansionPanel.jsx");
+expect(osExpansion.includes('from "@/lib/farmStoreRegistry"'), "Farm OS expansion panel imports the canonical shared store registry");
+expect(osExpansion.includes("FARM_STORE_BY_ID"), "Farm OS expansion panel resolves inventory, planting, and market stores canonically");
+expect(osExpansion.includes("readValidFarmStore"), "Farm OS expansion panel reuses canonical store validation");
+expect(!osExpansion.includes("const STORES ="), "Farm OS expansion panel does not duplicate storage keys or byte limits");
+
 const privacy = read("components/PrivacyTools.jsx");
 expect(privacy.includes("pff.growingJourney.v1"), "privacy tools expose Growing Journey local data");
 expect(privacy.includes("pff.growingJourney.backups.v1"), "privacy tools expose Growing Journey recovery snapshots");
