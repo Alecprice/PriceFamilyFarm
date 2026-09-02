@@ -49,6 +49,39 @@ function constantTimeTokenMatch(header, token) {
   return mismatch === 0;
 }
 
+async function readBoundedBody(request) {
+  const lengthHeader = request.headers.get("Content-Length");
+  const declaredLength = lengthHeader == null ? null : Number(lengthHeader);
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
+    throw new Error("payload_too_large");
+  }
+
+  if (!request.body) return "";
+
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let totalBytes = 0;
+  let raw = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    totalBytes += value.byteLength;
+    if (totalBytes > MAX_BODY_BYTES) {
+      try {
+        await reader.cancel();
+      } catch {
+        // Ignore cancellation errors; the request is already rejected.
+      }
+      throw new Error("payload_too_large");
+    }
+    raw += decoder.decode(value, { stream: true });
+  }
+
+  raw += decoder.decode();
+  return raw;
+}
+
 async function currentFarmId(sql) {
   const rows = await sql`
     SELECT id
@@ -146,15 +179,7 @@ const worker = {
       }
 
       if (request.method === "PUT") {
-        const length = Number(request.headers.get("Content-Length") || "0");
-        if (Number.isFinite(length) && length > MAX_BODY_BYTES) {
-          return json(env, { error: "payload_too_large" }, 413);
-        }
-
-        const raw = await request.text();
-        if (raw.length > MAX_BODY_BYTES) {
-          return json(env, { error: "payload_too_large" }, 413);
-        }
+        const raw = await readBoundedBody(request);
 
         let body;
         try {
@@ -209,10 +234,10 @@ const worker = {
       return json(env, { error: "method_not_allowed" }, 405);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error("Farm OS sync error", message);
       if (message.includes("payload_too_large")) {
         return json(env, { error: "payload_too_large" }, 413);
       }
+      console.error("Farm OS sync error", message);
       return json(env, { error: "internal_error" }, 500);
     }
   },
