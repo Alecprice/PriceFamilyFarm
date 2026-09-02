@@ -178,10 +178,10 @@ for (const label of ["What We Grow", "2026 Season Tracker", "Experiment Log", "F
 for (const label of ["Farm Analytics", "Crop Profitability", "Farm Inventory", "Farm OS Data Health", "Plantings & Successions", "Market Planner", "Weekly Work Sheet", "Farm Records", "Funding & Education"]) {
   expect(!nav.includes(`label: "${label}"`), `public navigation keeps ${label} behind the Farm OS doorway`);
 }
-for (const href of ["/farm-records", "/farm-analytics", "/farm-inventory", "/farm-os/planner", "/farm-os/calendar", "/farm-os/timeline", "/farm-os/journal", "/farm-os/map", "/funding"]) {
+for (const href of ["/farm-records", "/farm-analytics", "/farm-os/planner", "/farm-os/calendar", "/farm-os/timeline", "/farm-os/journal", "/farm-os/map", "/funding"]) {
   expect(osDashboard.includes(`href="${href}"`), `Farm OS dashboard retains private access to ${href}`);
 }
-for (const href of ["/plantings", "/market-planner", "/crop-profitability", "/weekly-work-sheet", "/farm-data-health", "/farm-backup"]) {
+for (const href of ["/farm-inventory", "/plantings", "/market-planner", "/crop-profitability", "/weekly-work-sheet", "/farm-data-health", "/farm-backup"]) {
   expect(osExpansion.includes(`href="${href}"`), `Farm OS expansion retains private access to ${href}`);
 }
 
