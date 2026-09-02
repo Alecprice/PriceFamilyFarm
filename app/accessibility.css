@@ -1,5 +1,28 @@
 /* Cross-site accessibility safeguards kept separate from the visual design system. */
 
+.skip-link {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  padding: 10px 14px;
+  border: 2px solid var(--mustard);
+  border-radius: 4px;
+  background: var(--paper-light);
+  color: var(--soil);
+  font-family: var(--font-body);
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  transform: translateY(calc(-100% - 24px));
+  transition: transform 0.15s ease;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
 :where(a, button, input, select, textarea, summary):focus-visible {
   outline: 3px solid var(--mustard);
   outline-offset: 3px;
