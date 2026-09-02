@@ -63,13 +63,14 @@ jobs:
           set -o pipefail
           node scripts/verify-cloud-sync.mjs 2>&1 | tee cloud-sync.log
 
-      - name: Farm sync worker tests
+      - name: Farm sync worker checks
         id: worker
         working-directory: workers/farm-sync
         run: |
           set -o pipefail
           npm ci 2>&1 | tee worker-install.log
           npm test 2>&1 | tee worker-test.log
+          npm run bundle:check 2>&1 | tee worker-bundle.log
           npm audit --audit-level=high 2>&1 | tee worker-audit.log
 
       - name: Report lint, security, Cloud Sync, or worker-contract failure
@@ -114,6 +115,12 @@ jobs:
               echo "#### Farm sync worker tests"
               echo '```text'
               tail -n 120 workers/farm-sync/worker-test.log
+              echo '```'
+            fi
+            if [ -f workers/farm-sync/worker-bundle.log ]; then
+              echo "#### Farm sync worker dry-run bundle"
+              echo '```text'
+              tail -n 120 workers/farm-sync/worker-bundle.log
               echo '```'
             fi
             if [ -f workers/farm-sync/worker-audit.log ]; then
@@ -203,6 +210,7 @@ jobs:
             playwright.log
             workers/farm-sync/worker-install.log
             workers/farm-sync/worker-test.log
+            workers/farm-sync/worker-bundle.log
             workers/farm-sync/worker-audit.log
             test-results/
             playwright-report/
