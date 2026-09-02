@@ -10,27 +10,30 @@ export const metadata = {
 export default function Contact() {
   return (
     <>
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <Nav />
 
-      <header className="page-head">
-        <div className="wrap">
-          <span className="eyebrow on-dark">Contact</span>
-          <h1>Get in touch.</h1>
-          <p>
-            Questions about what&rsquo;s in season, plant starts, availability, or just want to say hello?
-            Send a message and it&rsquo;ll land straight in our inbox.
-          </p>
-        </div>
-      </header>
-
-      <section>
-        <div className="wrap" style={{ maxWidth: 640 }}>
-          <div className="farm-tools-note">
-            <strong>Location privacy.</strong> The public site intentionally lists Greeneville and Greene County rather than a residential street address. Pickup or visit details are shared directly only when they are relevant and confirmed.
+      <main id="main-content" tabIndex={-1}>
+        <header className="page-head">
+          <div className="wrap">
+            <span className="eyebrow on-dark">Contact</span>
+            <h1>Get in touch.</h1>
+            <p>
+              Questions about what&rsquo;s in season, plant starts, availability, or just want to say hello?
+              Send a message and it&rsquo;ll land straight in our inbox.
+            </p>
           </div>
-          <ContactForm />
-        </div>
-      </section>
+        </header>
+
+        <section>
+          <div className="wrap" style={{ maxWidth: 640 }}>
+            <div className="farm-tools-note">
+              <strong>Location privacy.</strong> The public site intentionally lists Greeneville and Greene County rather than a residential street address. Pickup or visit details are shared directly only when they are relevant and confirmed.
+            </div>
+            <ContactForm />
+          </div>
+        </section>
+      </main>
 
       <Footer />
     </>
