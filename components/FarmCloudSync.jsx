@@ -153,7 +153,9 @@ export default function FarmCloudSync() {
         ? ` ${alreadyCurrent} already-matching cloud ${alreadyCurrent === 1 ? "copy was" : "copies were"} verified and revision-checkpointed.`
         : "";
       if (result.conflicts.length) {
-        return `Uploaded ${result.uploaded} data areas.${alreadyCurrentSummary} ${result.conflicts.length} conflict${result.conflicts.length === 1 ? "" : "s"} were left untouched; pull the cloud copy before deciding what to keep.`;
+        const conflictCount = result.conflicts.length;
+        const conflictVerb = conflictCount === 1 ? "was" : "were";
+        return `Uploaded ${result.uploaded} data areas.${alreadyCurrentSummary} ${conflictCount} conflict${conflictCount === 1 ? "" : "s"} ${conflictVerb} left untouched; pull the cloud copy before deciding what to keep.`;
       }
       return `Uploaded ${result.uploaded} valid browser data areas.${alreadyCurrentSummary} ${result.skipped} empty or invalid areas were skipped.`;
     });
