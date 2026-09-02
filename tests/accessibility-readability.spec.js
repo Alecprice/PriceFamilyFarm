@@ -1,5 +1,21 @@
 import { test, expect } from "@playwright/test";
 
+test("homepage exposes a main landmark and keyboard skip link", async ({ page }) => {
+  await page.goto("/");
+
+  const main = page.getByRole("main");
+  await expect(main).toHaveCount(1);
+  await expect(main).toHaveAttribute("id", "main-content");
+
+  const skip = page.getByRole("link", { name: "Skip to main content" });
+  await expect(skip).toHaveAttribute("href", "#main-content");
+
+  await skip.focus();
+  await expect(skip).toBeVisible();
+  await skip.press("Enter");
+  await expect(main).toBeFocused();
+});
+
 test("mobile navigation keeps a 44px touch target", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "small-phone", "small-phone touch target check");
   await page.goto("/");
