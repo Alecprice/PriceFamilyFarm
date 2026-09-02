@@ -152,7 +152,7 @@ const publicPrivateRoutePairs = [
   { label: "harvest", route: "/harvest", publicFile: "app/harvest/page.js", privateFile: "app/farm-os/harvest/page.js" },
   { label: "farm journal", route: "/farm-journal", publicFile: "app/farm-journal/page.js", privateFile: "app/farm-os/journal/page.js" },
   { label: "season timeline", route: "/timeline", publicFile: "app/timeline/page.js", privateFile: "app/farm-os/timeline/page.js" },
-  { label: "farm calendar", route: "/farm-calendar", publicFile: "app/farm-os/calendar/page.js", privateFile: "app/farm-os/calendar/page.js" },
+  { label: "farm calendar", route: "/farm-calendar", publicFile: "app/farm-calendar/page.js", privateFile: "app/farm-os/calendar/page.js" },
   { label: "farm map", route: "/farm-map", publicFile: "app/farm-map/page.js", privateFile: "app/farm-os/map/page.js" },
   { label: "farm planner", route: "/farm-planner", publicFile: "app/farm-planner/page.js", privateFile: "app/farm-os/planner/page.js" },
 ];
