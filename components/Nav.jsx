@@ -59,6 +59,7 @@ export default function Nav() {
   const [openMenu, setOpenMenu] = useState("");
   const navRef = useRef(null);
   const toggleRef = useRef(null);
+  const menuToggleRefs = useRef(new Map());
 
   const isChildActive = (children) => children.some((child) => child.href === pathname);
 
@@ -72,6 +73,8 @@ export default function Nav() {
           open && window.matchMedia("(max-width: 780px)").matches;
         if (mobileMenuWasOpen) {
           toggleRef.current?.focus();
+        } else if (openMenu) {
+          menuToggleRefs.current.get(openMenu)?.focus();
         }
         setOpenMenu("");
         setOpen(false);
@@ -83,7 +86,7 @@ export default function Nav() {
       document.removeEventListener("pointerdown", onDocumentPointer);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, openMenu]);
 
   useEffect(() => {
     const media = window.matchMedia("(max-width: 780px)");
@@ -137,7 +140,17 @@ export default function Nav() {
         <ul id="primary-nav-links" className={`nav-links${open ? " open" : ""}`}>
           {NAV_ITEMS.map((item) => item.children ? (
             <li key={item.label} className="nav-dropdown">
-              <button type="button" className="nav-dropdown-toggle" aria-expanded={openMenu === item.label} aria-current={isChildActive(item.children) ? "page" : undefined} onClick={() => setOpenMenu((current) => current === item.label ? "" : item.label)}>
+              <button
+                ref={(node) => {
+                  if (node) menuToggleRefs.current.set(item.label, node);
+                  else menuToggleRefs.current.delete(item.label);
+                }}
+                type="button"
+                className="nav-dropdown-toggle"
+                aria-expanded={openMenu === item.label}
+                aria-current={isChildActive(item.children) ? "page" : undefined}
+                onClick={() => setOpenMenu((current) => current === item.label ? "" : item.label)}
+              >
                 {item.label} <span className="caret" aria-hidden="true">▾</span>
               </button>
               <ul className={`dropdown-menu${openMenu === item.label ? " open" : ""}`}>
