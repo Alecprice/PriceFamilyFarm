@@ -3,6 +3,10 @@ import fs from "node:fs";
 import worker from "../src/index.js";
 
 const source = fs.readFileSync(new URL("../src/index.js", import.meta.url), "utf8");
+const migration002 = fs.readFileSync(
+  new URL("../migrations/002_serialize_document_creates.sql", import.meta.url),
+  "utf8",
+);
 
 const allowedOrigin = "https://price-family-farm.alecjprice.com";
 const configuredEnv = {
@@ -39,6 +43,20 @@ describe("Farm OS cloud sync security contracts", () => {
     expect(source).toContain("expectedRevision");
     expect(source).toContain("pff_put_document");
     expect(source).toContain('status === "conflict"');
+  });
+
+  it("keeps the streamed request limit byte-based", () => {
+    expect(source).toContain("request.body.getReader()");
+    expect(source).toContain("value.byteLength");
+    expect(source).toContain("payload_too_large");
+  });
+
+  it("serializes first-write races before the document row lookup", () => {
+    expect(migration002).toContain("pg_advisory_xact_lock");
+    expect(migration002.indexOf("pg_advisory_xact_lock")).toBeLessThan(
+      migration002.indexOf("FOR UPDATE"),
+    );
+    expect(migration002).toContain("'version', 2");
   });
 });
 

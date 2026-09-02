@@ -25,12 +25,18 @@ const workerConfig = read("workers/farm-sync/wrangler.toml");
 const sitemap = read("app/sitemap.js");
 
 const migration = read("workers/farm-sync/migrations/001_initial_cloud_sync.sql");
+const migration002 = read("workers/farm-sync/migrations/002_serialize_document_creates.sql");
 expect(migration.includes("CREATE TABLE IF NOT EXISTS public.farm_documents"), "versioned migration creates Farm OS cloud documents");
 expect(migration.includes("CREATE TABLE IF NOT EXISTS public.farm_document_versions"), "versioned migration preserves document history");
 expect(migration.includes("CREATE TABLE IF NOT EXISTS public.farm_sync_events"), "versioned migration creates sync audit events");
 expect(migration.includes("CREATE OR REPLACE FUNCTION public.pff_put_document"), "versioned migration defines revision-aware document writes");
 expect(migration.includes("small-water-25690282"), "versioned migration records the dedicated Price Family Farm Neon project identity");
 expect(!migration.includes("postgresql://") && !migration.includes("postgres://"), "versioned migration contains no database credential URI");
+expect(migration002.includes("CREATE OR REPLACE FUNCTION public.pff_put_document"), "follow-up migration replaces the document write function safely");
+expect(migration002.includes("pg_advisory_xact_lock"), "follow-up migration serializes first-write races before document lookup");
+expect(migration002.indexOf("pg_advisory_xact_lock") < migration002.indexOf("FOR UPDATE"), "advisory lock is acquired before row lookup");
+expect(migration002.includes("'version', 2"), "follow-up migration advances the cloud-sync schema version");
+expect(!migration002.includes("postgresql://") && !migration002.includes("postgres://"), "follow-up migration contains no database credential URI");
 
 expect(page.includes("index: false"), "Cloud Sync page is noindex");
 expect(!sitemap.includes('"/farm-os/cloud-sync"'), "Cloud Sync page is excluded from the public sitemap");
@@ -53,6 +59,8 @@ expect(worker.includes("env.DATABASE_URL"), "Worker keeps Neon connection in ser
 expect(worker.includes("PFF_SYNC_TOKEN"), "Worker requires a private sync token");
 expect(worker.includes("pff_put_document"), "Worker uses revision-aware Neon write function");
 expect(worker.includes("ALLOWED_DOCUMENT_KEYS"), "Worker enforces the Farm OS server-side document allowlist");
+expect(worker.includes("request.body.getReader()"), "Worker enforces request size while streaming the body");
+expect(worker.includes("value.byteLength"), "Worker measures streamed request size in bytes");
 expect(workerConfig.includes("PFF_ALLOWED_ORIGIN"), "Worker declares restricted production origin");
 expect(!worker.includes("NEXT_PUBLIC_DATABASE_URL"), "Worker does not expose a public database variable");
 
