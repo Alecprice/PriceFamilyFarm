@@ -22,7 +22,7 @@ test("home stays usable without horizontal overflow", async ({ page }) => {
   await expectNoHorizontalOverflow(page);
 });
 
-test("navigation exposes task-oriented destinations", async ({ page }) => {
+test("navigation exposes public destinations and keeps private tools behind Farm OS", async ({ page }) => {
   await page.goto("/");
   await openPrimaryNavIfCollapsed(page);
 
@@ -32,9 +32,10 @@ test("navigation exposes task-oriented destinations", async ({ page }) => {
   await farmMenu.click();
   await expect(farmMenu).toHaveAttribute("aria-expanded", "true");
   await expect(primaryNav.getByRole("link", { name: "Farm OS", exact: true })).toBeVisible();
-  await expect(primaryNav.getByRole("link", { name: "Farm Records", exact: true })).toBeVisible();
-  await expect(primaryNav.getByRole("link", { name: "Farm Analytics", exact: true })).toBeVisible();
   await expect(primaryNav.getByRole("link", { name: "Availability", exact: true })).toBeVisible();
+  await expect(primaryNav.getByRole("link", { name: "Farm Journal", exact: true })).toBeVisible();
+  await expect(primaryNav.getByRole("link", { name: "Farm Records", exact: true })).toHaveCount(0);
+  await expect(primaryNav.getByRole("link", { name: "Farm Analytics", exact: true })).toHaveCount(0);
 });
 
 test("Farm Records persist private harvest data across reload", async ({ page }) => {
