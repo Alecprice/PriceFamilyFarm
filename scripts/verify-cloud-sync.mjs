@@ -52,6 +52,10 @@ expect(prePullSnapshotWrite >= 0 && cloudRestoreWrite > prePullSnapshotWrite, "c
 expect(component.includes("Cloud restore stopped before replacing anything"), "Cloud Sync UI explains safe restore aborts without implying data was replaced");
 expect(client.includes("new TextEncoder().encode(snapshotRaw).byteLength"), "pre-pull snapshot limit is measured in encoded bytes");
 expect(client.includes("expectedRevision"), "client sends optimistic revision guards");
+const revisionAssignment = client.indexOf("revisions[store.id] = Number(body.revision)");
+const revisionCheckpoint = client.indexOf("writeRevisionMap(revisions)", revisionAssignment);
+const uploadIncrement = client.indexOf("result.uploaded += 1", revisionAssignment);
+expect(revisionAssignment >= 0 && revisionCheckpoint > revisionAssignment && revisionCheckpoint < uploadIncrement, "successful cloud pushes checkpoint each server revision before continuing");
 expect(client.includes("validFarmStoreValue"), "cloud restores validate store payloads");
 expect(registry.includes("pff.growingJourney.v1"), "shared allowlist includes Growing Journey");
 expect(backup.includes("FARM_STORES"), "local backup uses the shared store allowlist");
