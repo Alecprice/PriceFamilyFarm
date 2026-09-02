@@ -13,7 +13,7 @@ export default function TimelinePage() {
     <>
       <Nav />
       <header className="page-head"><div className="wrap"><span className="eyebrow on-dark">Farm Timeline</span><h1>A farm gets built one milestone at a time.</h1><p>Confirmed dates and milestones are preserved here so the story can keep extending year after year.</p></div></header>
-      <section><div className="wrap"><div className="milestone-timeline">{MILESTONES.map((item) => <article key={`${item.date}-${item.title}`}><div className="milestone-dot"/><div className="milestone-date">{item.date}</div><h2>{item.title}</h2><p>{item.body}</p></article>)}</div><div className="btn-row"><Link className="btn btn-clay" href="/farm-journal">Read the farm journal</Link><Link className="btn btn-outline btn-on-light" href="/documentation#official-records">Official records</Link></div></div></section>
+      <main id="main-content" tabIndex={-1}><section><div className="wrap"><div className="milestone-timeline">{MILESTONES.map((item) => <article key={`${item.date}-${item.title}`}><div className="milestone-dot"/><div className="milestone-date">{item.date}</div><h2>{item.title}</h2><p>{item.body}</p></article>)}</div><div className="btn-row"><Link className="btn btn-clay" href="/farm-journal">Read the farm journal</Link><Link className="btn btn-outline btn-on-light" href="/documentation#official-records">Official records</Link></div></div></section></main>
       <Footer />
     </>
   );
