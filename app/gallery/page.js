@@ -71,33 +71,36 @@ const SECTIONS = [
 export default function Gallery() {
   return (
     <LightboxProvider>
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <Nav />
 
-      <header className="page-head">
-        <div className="wrap">
-          <span className="eyebrow on-dark">Gallery</span>
-          <h1>A season on the farm, February through June.</h1>
-          <p>Unfiltered progress shots: trays, containers, orchard plantings, and the daily texture of building a farm from a home lot. Click any photo to view it larger.</p>
-        </div>
-      </header>
+      <main id="main-content" tabIndex={-1}>
+        <header className="page-head">
+          <div className="wrap">
+            <span className="eyebrow on-dark">Gallery</span>
+            <h1>A season on the farm, February through June.</h1>
+            <p>Unfiltered progress shots: trays, containers, orchard plantings, and the daily texture of building a farm from a home lot. Click any photo to view it larger.</p>
+          </div>
+        </header>
 
-      <section>
-        <div className="wrap">
-          {SECTIONS.map((sec, i) => (
-            <div key={sec.label}>
-              <div className="section-head" style={i > 0 ? { marginTop: 56 } : undefined}>
-                <span className="eyebrow">{sec.label}</span>
-                <h2>{sec.title}</h2>
+        <section>
+          <div className="wrap">
+            {SECTIONS.map((sec, i) => (
+              <div key={sec.label}>
+                <div className="section-head" style={i > 0 ? { marginTop: 56 } : undefined}>
+                  <span className="eyebrow">{sec.label}</span>
+                  <h2>{sec.title}</h2>
+                </div>
+                <div className="gal">
+                  {sec.photos.map((p) => (
+                    <GalleryImage key={p.src} src={p.src} alt={p.alt} />
+                  ))}
+                </div>
               </div>
-              <div className="gal">
-                {sec.photos.map((p) => (
-                  <GalleryImage key={p.src} src={p.src} alt={p.alt} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      </main>
 
       <Footer />
     </LightboxProvider>
