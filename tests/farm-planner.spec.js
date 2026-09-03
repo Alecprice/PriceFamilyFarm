@@ -8,7 +8,12 @@ test("farm planner persists crop plans and status locally", async ({ page }) => 
   await page.locator("#planner-method").selectOption("Transplant");
   await page.locator("#planner-sow-date").fill("2026-08-28");
   await page.locator("#planner-harvest-date").fill("2026-10-10");
-  await page.getByRole("button", { name: "Add crop plan", exact: true }).click();
+
+  // Use the native keyboard submit path so this persistence regression is not
+  // coupled to small-screen WebKit pointer stability while the page scrolls.
+  const addPlan = page.getByRole("button", { name: "Add crop plan", exact: true });
+  await addPlan.focus();
+  await addPlan.press("Enter");
 
   await expect(page.getByRole("heading", { name: "Tomato · Cherokee Purple", exact: true })).toBeVisible();
   await page.getByLabel("Update status for Tomato Cherokee Purple").selectOption("Started");

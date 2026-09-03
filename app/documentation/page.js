@@ -52,149 +52,152 @@ const STEPS = [
 export default function Documentation() {
   return (
     <>
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <Nav />
 
-      <header className="page-head">
-        <div className="wrap">
-          <span className="eyebrow on-dark">Documentation</span>
-          <h1>Becoming an official Tennessee family farm: the paper trail.</h1>
-          <p>Growing the food is only half the job. This is the recordkeeping and state process behind Price Family Farm, laid out step by step for anyone doing this in Tennessee for the first time.</p>
-        </div>
-      </header>
-
-      <section>
-        <div className="wrap">
-          <div className="section-head">
-            <span className="eyebrow">The process</span>
-            <h2>Six steps, one growing season.</h2>
-            <p>None of this happens overnight. It runs alongside the actual farm work, built up through the season as the operation became real enough to document.</p>
+      <main id="main-content" tabIndex={-1}>
+        <header className="page-head">
+          <div className="wrap">
+            <span className="eyebrow on-dark">Documentation</span>
+            <h1>Becoming an official Tennessee family farm: the paper trail.</h1>
+            <p>Growing the food is only half the job. This is the recordkeeping and state process behind Price Family Farm, laid out step by step for anyone doing this in Tennessee for the first time.</p>
           </div>
+        </header>
 
-          <div style={{ maxWidth: 760 }}>
-            {STEPS.map((s) => (
-              <div className="step" key={s.n}>
-                <div className="step-num">{s.n}</div>
-                <div>
-                  <h3>{s.title}</h3>
-                  <p>{s.body}</p>
-                  <div className="filed">{s.filed}</div>
+        <section>
+          <div className="wrap">
+            <div className="section-head">
+              <span className="eyebrow">The process</span>
+              <h2>Six steps, one growing season.</h2>
+              <p>None of this happens overnight. It runs alongside the actual farm work, built up through the season as the operation became real enough to document.</p>
+            </div>
+
+            <div style={{ maxWidth: 760 }}>
+              {STEPS.map((s) => (
+                <div className="step" key={s.n}>
+                  <div className="step-num">{s.n}</div>
+                  <div>
+                    <h3>{s.title}</h3>
+                    <p>{s.body}</p>
+                    <div className="filed">{s.filed}</div>
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="stat-band">
+          <div className="wrap">
+            <div><b>6</b><span>Steps completed this season</span></div>
+            <div><b>12+</b><span>Receipts &amp; sources logged</span></div>
+            <div><b>2</b><span>State agencies involved</span></div>
+            <div><b>1</b><span>Growing season, start to registered</span></div>
+          </div>
+        </section>
+
+        <section className="bg-cream bg-line-top">
+          <div className="wrap">
+            <div className="section-head">
+              <span className="eyebrow">What went into it</span>
+              <h2>The infrastructure behind &ldquo;actively engaged.&rdquo;</h2>
+              <p>The recordkeeping behind the written statement: real receipts across soil, containers, seed, and structures, not a placeholder plan.</p>
+            </div>
+            <div className="grid-3">
+              <div className="packet">
+                <h3>Growing structures</h3>
+                <ul>
+                  <li>10×12 ft. greenhouse</li>
+                  <li>Two indoor grow tents with climate control</li>
+                  <li>Grow shelving &amp; raised metal beds</li>
+                </ul>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="stat-band">
-        <div className="wrap">
-          <div><b>6</b><span>Steps completed this season</span></div>
-          <div><b>12+</b><span>Receipts &amp; sources logged</span></div>
-          <div><b>2</b><span>State agencies involved</span></div>
-          <div><b>1</b><span>Growing season, start to registered</span></div>
-        </div>
-      </section>
-
-      <section className="bg-cream bg-line-top">
-        <div className="wrap">
-          <div className="section-head">
-            <span className="eyebrow">What went into it</span>
-            <h2>The infrastructure behind &ldquo;actively engaged.&rdquo;</h2>
-            <p>The recordkeeping behind the written statement: real receipts across soil, containers, seed, and structures, not a placeholder plan.</p>
-          </div>
-          <div className="grid-3">
-            <div className="packet">
-              <h3>Growing structures</h3>
-              <ul>
-                <li>10×12 ft. greenhouse</li>
-                <li>Two indoor grow tents with climate control</li>
-                <li>Grow shelving &amp; raised metal beds</li>
-              </ul>
+              <div className="packet">
+                <h3>Soil &amp; materials</h3>
+                <ul>
+                  <li>Potting mix &amp; garden soil, multiple orders</li>
+                  <li>Berry-Tone &amp; plant food</li>
+                  <li>Mulch and wood for raised beds</li>
+                </ul>
+              </div>
+              <div className="packet">
+                <h3>Plants &amp; seed</h3>
+                <ul>
+                  <li>Blueberries, peppers &amp; nursery stock</li>
+                  <li>Multiple seed orders</li>
+                  <li>44 pots and growing supplies</li>
+                </ul>
+              </div>
             </div>
-            <div className="packet">
-              <h3>Soil &amp; materials</h3>
-              <ul>
-                <li>Potting mix &amp; garden soil, multiple orders</li>
-                <li>Berry-Tone &amp; plant food</li>
-                <li>Mulch and wood for raised beds</li>
-              </ul>
-            </div>
-            <div className="packet">
-              <h3>Plants &amp; seed</h3>
-              <ul>
-                <li>Blueberries, peppers &amp; nursery stock</li>
-                <li>Multiple seed orders</li>
-                <li>44 pots and growing supplies</li>
-              </ul>
-            </div>
-          </div>
-          <p style={{ marginTop: 20, color: "var(--ink-soft)", fontSize: 14.5 }}>
-            Note: this page summarizes our own recordkeeping and application process for anyone curious about how a
-            Tennessee family farm gets registered. It isn&rsquo;t legal or tax advice, so if you&rsquo;re starting your
-            own farm, check current forms and requirements with the TN Department of Agriculture and Department of
-            Revenue directly.
-          </p>
-        </div>
-      </section>
-
-      <section className="bg-cream bg-line-top">
-        <div className="wrap">
-          <div className="section-head">
-            <span className="eyebrow">Official records &amp; training</span>
-            <h2>The documents behind the milestones.</h2>
-            <p>
-              Original records supporting the farm registration and
-              completed farm-management training are preserved here with
-              the public farm record.
+            <p style={{ marginTop: 20, color: "var(--ink-soft)", fontSize: 14.5 }}>
+              Note: this page summarizes our own recordkeeping and application process for anyone curious about how a
+              Tennessee family farm gets registered. It isn&rsquo;t legal or tax advice, so if you&rsquo;re starting your
+              own farm, check current forms and requirements with the TN Department of Agriculture and Department of
+              Revenue directly.
             </p>
           </div>
+        </section>
 
-          <div className="grid-2">
-            <article className="packet">
-              <Image
-                src={farmNameRegistration}
-                alt="Tennessee family farm name registration for Price Family Farm"
-                sizes="(max-width: 760px) 100vw, 50vw"
-                style={{ width: "100%", height: "auto", borderRadius: 12 }}
-              />
-              <h3>Price Family Farm registration</h3>
+        <section className="bg-cream bg-line-top">
+          <div className="wrap">
+            <div className="section-head">
+              <span className="eyebrow">Official records &amp; training</span>
+              <h2>The documents behind the milestones.</h2>
               <p>
-                Tennessee Department of Agriculture family farm name
-                registration for Greene County, dated June 16, 2026.
+                Original records supporting the farm registration and
+                completed farm-management training are preserved here with
+                the public farm record.
               </p>
-              <a
-                className="stat-link"
-                href="/documents/price-family-farm-registration.pdf"
-                target="_blank"
-                rel="noreferrer"
-              >
-                View original registration PDF →
-              </a>
-            </article>
+            </div>
 
-            <article className="packet">
-              <Image
-                src={masterFarmManager}
-                alt="University of Tennessee Master Farm Manager Program completion certificate"
-                sizes="(max-width: 760px) 100vw, 50vw"
-                style={{ width: "100%", height: "auto", borderRadius: 12 }}
-              />
-              <h3>Master Farm Manager Program</h3>
-              <p>
-                University of Tennessee Institute of Agriculture Master
-                Farm Manager Program completion, July 31, 2026.
-              </p>
-              <a
-                className="stat-link"
-                href="/documents/alec-price-master-farm-manager.pdf"
-                target="_blank"
-                rel="noreferrer"
-              >
-                View original training certificate PDF →
-              </a>
-            </article>
+            <div className="grid-2">
+              <article className="packet">
+                <Image
+                  src={farmNameRegistration}
+                  alt="Tennessee family farm name registration for Price Family Farm"
+                  sizes="(max-width: 760px) 100vw, 50vw"
+                  style={{ width: "100%", height: "auto", borderRadius: 12 }}
+                />
+                <h3>Price Family Farm registration</h3>
+                <p>
+                  Tennessee Department of Agriculture family farm name
+                  registration for Greene County, dated June 16, 2026.
+                </p>
+                <a
+                  className="stat-link"
+                  href="/documents/price-family-farm-registration.pdf"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View original registration PDF →
+                </a>
+              </article>
+
+              <article className="packet">
+                <Image
+                  src={masterFarmManager}
+                  alt="University of Tennessee Master Farm Manager Program completion certificate"
+                  sizes="(max-width: 760px) 100vw, 50vw"
+                  style={{ width: "100%", height: "auto", borderRadius: 12 }}
+                />
+                <h3>Master Farm Manager Program</h3>
+                <p>
+                  University of Tennessee Institute of Agriculture Master
+                  Farm Manager Program completion, July 31, 2026.
+                </p>
+                <a
+                  className="stat-link"
+                  href="/documents/alec-price-master-farm-manager.pdf"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View original training certificate PDF →
+                </a>
+              </article>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <Footer />
     </>
