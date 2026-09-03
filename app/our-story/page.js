@@ -118,71 +118,74 @@ const storyImageProps = {
 export default function OurStory() {
   return (
     <>
+      <a className="skip-link" href="#main-content">Skip to main content</a>
       <Nav />
 
-      <header className="page-head">
-        <div className="wrap">
-          <span className="eyebrow on-dark">Our Story</span>
-          <h1>One growing season, from bare root to registered farm.</h1>
-          <p>
-            Price Family Farm started this year in Greeneville, Tennessee. No inherited operation, no
-            shortcuts. Here&rsquo;s the season as it actually happened, month by month.
-          </p>
-        </div>
-      </header>
+      <main id="main-content" tabIndex={-1}>
+        <header className="page-head">
+          <div className="wrap">
+            <span className="eyebrow on-dark">Our Story</span>
+            <h1>One growing season, from bare root to registered farm.</h1>
+            <p>
+              Price Family Farm started this year in Greeneville, Tennessee. No inherited operation, no
+              shortcuts. Here&rsquo;s the season as it actually happened, month by month.
+            </p>
+          </div>
+        </header>
 
-      <section>
-        <div className="wrap">
-          <div className="ledger">
-            {ENTRIES.map((e) => (
-              <div className="entry" key={e.title}>
-                <div className="entry-date">{e.date}<div className="dot"></div></div>
+        <section>
+          <div className="wrap">
+            <div className="ledger">
+              {ENTRIES.map((e) => (
+                <div className="entry" key={e.title}>
+                  <div className="entry-date">{e.date}<div className="dot"></div></div>
+                  <div className="entry-body">
+                    <div>
+                      <span className="entry-tag">{e.tag}</span>
+                      <h3>{e.title}</h3>
+                      <p>{e.body}</p>
+                    </div>
+                    <div className="entry-photo"><Image src={e.img} alt={e.alt} {...storyImageProps} /></div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="entry">
+                <div className="entry-date">Jun 16 – 23<div className="dot"></div></div>
                 <div className="entry-body">
                   <div>
-                    <span className="entry-tag">{e.tag}</span>
-                    <h3>{e.title}</h3>
-                    <p>{e.body}</p>
+                    <span className="entry-tag paper">On paper</span>
+                    <h3>It becomes official</h3>
+                    <p>
+                      In the span of a week: the Tennessee Department of Agriculture registered{" "}
+                      <strong>Price Family Farm</strong> as an official family farm name, the business plan was
+                      finalized, and the written statement of active engagement went to the Department of Revenue.
+                      The full paper trail is on the <Link href="/documentation">Documentation</Link> page.
+                    </p>
                   </div>
-                  <div className="entry-photo"><Image src={e.img} alt={e.alt} {...storyImageProps} /></div>
+                  <div className="entry-photo"><Image src="/images/collage-beds.jpg" alt="A collage of the season's raised beds and container plantings" {...storyImageProps} /></div>
                 </div>
-              </div>
-            ))}
-
-            <div className="entry">
-              <div className="entry-date">Jun 16 – 23<div className="dot"></div></div>
-              <div className="entry-body">
-                <div>
-                  <span className="entry-tag paper">On paper</span>
-                  <h3>It becomes official</h3>
-                  <p>
-                    In the span of a week: the Tennessee Department of Agriculture registered{" "}
-                    <strong>Price Family Farm</strong> as an official family farm name, the business plan was
-                    finalized, and the written statement of active engagement went to the Department of Revenue.
-                    The full paper trail is on the <Link href="/documentation">Documentation</Link> page.
-                  </p>
-                </div>
-                <div className="entry-photo"><Image src="/images/collage-beds.jpg" alt="A collage of the season's raised beds and container plantings" {...storyImageProps} /></div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="bg-cream bg-line-top">
-        <div className="wrap">
-          <div className="pull">
-            &ldquo;My operation is currently in a primary growth phase, utilizing intensive container gardening,
-            greenhouse propagation, and established orchard management to produce a variety of fruits, berries,
-            herbs, and vegetables for the local market.&rdquo;
-            <cite>Cover letter to the TN Department of Revenue, June 21, 2026</cite>
+        <section className="bg-cream bg-line-top">
+          <div className="wrap">
+            <div className="pull">
+              &ldquo;My operation is currently in a primary growth phase, utilizing intensive container gardening,
+              greenhouse propagation, and established orchard management to produce a variety of fruits, berries,
+              herbs, and vegetables for the local market.&rdquo;
+              <cite>Cover letter to the TN Department of Revenue, June 21, 2026</cite>
+            </div>
+            <div className="btn-row">
+              <Link className="btn btn-clay" style={{ border: "1px solid var(--clay)", background: "var(--clay)", color: "#fff" }} href="/what-we-grow">
+                See what we grow next
+              </Link>
+            </div>
           </div>
-          <div className="btn-row">
-            <Link className="btn btn-clay" style={{ border: "1px solid var(--clay)", background: "var(--clay)", color: "#fff" }} href="/what-we-grow">
-              See what we grow next
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
       <Footer />
     </>
